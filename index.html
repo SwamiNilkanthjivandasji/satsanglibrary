@@ -139,28 +139,13 @@
                 <div>
                     <h1 class="text-lg sm:text-xl font-bold tracking-tight theme-text-primary flex items-center gap-2">
                         સત્સંગ પુસ્તકાલય
-                        <span class="text-xs px-2 py-0.5 rounded-full theme-accent-light theme-accent-text font-medium hidden sm:inline-block">XML Reader</span>
                     </h1>
                     <p class="text-xs theme-text-secondary">ડિજિટલ આધ્યાત્મિક ગ્રંથો અને વાંચન</p>
                 </div>
             </div>
 
-            <!-- Action Buttons & Theme Controls -->
+            <!-- Theme Controls (Clean End-User Header) -->
             <div class="flex items-center gap-2 sm:gap-3">
-                <!-- Upload / Test Local XML Button -->
-                <label for="xml-upload-input" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium theme-accent-light theme-accent-text hover:opacity-90 transition border theme-border shadow-sm" title="તમારી પોતાની XML ફાઇલ અહીં ટેસ્ટ કરો">
-                    <i data-lucide="upload" class="w-4 h-4"></i>
-                    <span>XML ટેસ્ટ કરો</span>
-                    <input id="xml-upload-input" type="file" accept=".xml" multiple class="hidden" onchange="handleLocalXmlUpload(event)">
-                </label>
-
-                <!-- GitHub Guide Modal Button -->
-                <button onclick="toggleGitHubModal(true)" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium theme-bg-secondary theme-text-primary hover:opacity-80 transition border theme-border" title="GitHub પર કેવી રીતે મૂકવું તેની માહિતી">
-                    <i data-lucide="github" class="w-4 h-4"></i>
-                    <span class="hidden md:inline">GitHub માહિતી</span>
-                </button>
-
-                <!-- Theme Switcher -->
                 <div class="flex items-center rounded-xl p-1 theme-bg-secondary border theme-border">
                     <button onclick="setTheme('light')" id="btn-theme-light" class="p-1.5 rounded-lg text-xs font-medium transition" title="લાઇટ મોડ (Light)">
                         <i data-lucide="sun" class="w-4 h-4"></i>
@@ -205,7 +190,7 @@
     <!-- Main Dynamic Workspace -->
     <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         
-        <!-- Notification Banner for Uploaded XML or Status -->
+        <!-- Notification Banner -->
         <div id="toast-banner" class="hidden mb-6 p-4 rounded-2xl theme-accent-light border theme-border flex items-center justify-between gap-3 shadow-sm">
             <div class="flex items-center gap-3">
                 <i data-lucide="check-circle-2" class="w-5 h-5 theme-accent-text shrink-0"></i>
@@ -214,6 +199,15 @@
             <button onclick="hideToast()" class="theme-text-secondary hover:theme-text-primary">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
+        </div>
+
+        <!-- Loading Indicator while fetching XML files from books/ folder -->
+        <div id="loading-state" class="hidden py-16 text-center space-y-3">
+            <div class="w-12 h-12 rounded-2xl theme-accent-light theme-accent-text flex items-center justify-center mx-auto animate-pulse">
+                <i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>
+            </div>
+            <p class="text-base font-semibold theme-text-primary">પુસ્તકો લોડ થઈ રહ્યા છે...</p>
+            <p class="text-xs theme-text-secondary">કૃપા કરીને થોડી રાહ જુઓ</p>
         </div>
 
         <!-- VIEW 1: BOOKS LIBRARY GRID -->
@@ -354,94 +348,63 @@
 
     </main>
 
-    <!-- GitHub Hosting Setup Guide Modal -->
-    <div id="github-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="theme-bg-card border theme-border rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-5">
-            <div class="flex items-center justify-between border-b theme-border pb-4">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-2 rounded-xl theme-accent-light theme-accent-text">
-                        <i data-lucide="github" class="w-6 h-6"></i>
-                    </div>
-                    <h3 class="text-lg sm:text-xl font-bold theme-text-primary">GitHub પર આ વેબ એપ કેવી રીતે મૂકવી?</h3>
-                </div>
-                <button onclick="toggleGitHubModal(false)" class="p-1.5 rounded-lg theme-bg-secondary hover:opacity-80">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4 text-sm leading-relaxed theme-text-primary">
-                <p>તમે તમારી બધી જ XML ફાઇલોને GitHub Repository માં રાખીને મફતમાં <strong>GitHub Pages</strong> દ્વારા વેબસાઇટ ચલાવી શકો છો. તેના માટે નીચે મુજબ ફોલ્ડર સ્ટ્રક્ચર રાખો:</p>
-
-                <div class="p-4 rounded-2xl theme-bg-secondary border theme-border font-mono text-xs overflow-x-auto">
-<pre>my-satsang-library/
-├── index.html          (આ વેબ એપની ફાઇલ)
-├── books/              (તમારી બધી XML ફાઇલો અહીં મૂકો)
-│   ├── mahima.xml
-│   ├── vachanamrut.xml
-│   └── ...બીજી ફાઇલો.xml</pre>
-                </div>
-
-                <h4 class="font-bold text-base theme-accent-text pt-2">નવી XML ફાઇલ ઉમેરવાની રીત:</h4>
-                <p>આ <code>index.html</code> ફાઇલની અંદર જાવાસ્ક્રિપ્ટમાં <code>EXTERNAL_BOOKS_CONFIG</code> નામનું લિસ્ટ આપેલું છે. તેમાં ખાલી તમારી XML ફાઇલનું નામ અને પાથ નીચે મુજબ લખી દો:</p>
-
-                <div class="p-4 rounded-2xl theme-bg-secondary border theme-border font-mono text-xs overflow-x-auto">
-<pre>const EXTERNAL_BOOKS_CONFIG = [
-  {
-    id: "book-1",
-    title: "મહિમા સાથે નિશ્ચય શા માટે ?",
-    category: "સત્સંગ કથા",
-    xmlUrl: "books/mahima.xml"
-  },
-  {
-    id: "book-2",
-    title: "વચનામૃત",
-    category: "શ્રીજી મહારાજના વચનામૃત",
-    xmlUrl: "books/vachanamrut.xml"
-  }
-];</pre>
-                </div>
-
-                <div class="p-4 rounded-2xl theme-accent-light border theme-border text-xs sm:text-sm space-y-1">
-                    <p class="font-bold theme-accent-text">✨ ઓટોમેટિક XML ડિટેક્શન:</p>
-                    <p>તમારે એ ચિંતા કરવાની જરૂર નથી કે XML ફાઇલમાં <code>&lt;sub_chapter&gt;</code> છે કે નહીં! આ એપ આપોઆપ ચેક કરી લેશે:</p>
-                    <ul class="list-disc list-inside pl-2 space-y-1 pt-1">
-                        <li>જો ચેપ્ટરની અંદર <code>&lt;sub_chapter&gt;</code> હશે, તો પહેલા સબ-ચેપ્ટરનું લિસ્ટ બતાવશે.</li>
-                        <li>જો સીધું <code>&lt;content&gt;</code> હશે, તો ચેપ્ટર પર ક્લિક કરતાની સાથે જ સીધું વાંચન (Content) ખૂલી જશે!</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="pt-2 flex justify-end">
-                <button onclick="toggleGitHubModal(false)" class="px-5 py-2.5 rounded-xl theme-accent-bg text-white font-medium text-sm hover:opacity-90 transition">
-                    સમજાઈ ગયું, બંધ કરો
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
     <footer class="border-t theme-border theme-bg-secondary py-5 mt-12">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs theme-text-secondary">
-            <p>સત્સંગ પુસ્તકાલય • ગુજરાતી XML બુક રીડર</p>
-            <p>Both Direct Chapter & Nested Sub-chapter XML Supported</p>
+            <p>સત્સંગ પુસ્તકાલય • ડિજિટલ ગ્રંથાલય</p>
+            <p>શ્રી સ્વામિનારાયણ સંપ્રદાયના આધ્યાત્મિક ગ્રંથો</p>
         </div>
     </footer>
 
     <!-- Application Logic -->
     <script>
         /***********************************************************************
-         * 1. PRE-LOADED XML SAMPLES (From User's Exact Prompt Examples)
-         *    Plus support for fetching external XML files when hosted on GitHub!
+         * 1. BOOKS FOLDER CONFIGURATION (તમારા GitHub ના `books/` ફોલ્ડરનું લિસ્ટ)
+         * ---------------------------------------------------------------------
+         * રીત ૧: તમારા `books/` ફોલ્ડરમાં રહેલી XML ફાઇલોના નામ નીચે `BOOKS_CONFIG` માં લખો.
+         * રીત ૨: અથવા જો તમારે ઓટોમેટિક બધી XML ફાઇલો લોડ કરવી હોય, તો નીચે `GITHUB_CONFIG` માં
+         *        તમારું GitHub username અને repo નું નામ લખી દો, એટલે `books/` ફોલ્ડરની બધી જ
+         *        .xml ફાઇલો આપોઆપ લોડ થઈ જશે!
          ***********************************************************************/
         
-        // To load additional XML files hosted on your GitHub repository, add their paths here:
-        const EXTERNAL_BOOKS_CONFIG = [
-            // Example when you put files on GitHub:
-            // { id: 'ext-1', title: 'ભક્તચિંતામણી', category: 'સંપ્રદાય ગ્રંથ', xmlUrl: 'books/bhaktachintamani.xml' }
+        const GITHUB_CONFIG = {
+            username: "", // દા.ત. "your-github-username" (ખાલી રાખશો તો નીચેના BOOKS_CONFIG મુજબ ચાલશે)
+            repo: "",     // દા.ત. "satsang-books"
+            branch: "main",
+            folder: "books"
+        };
+
+        const BOOKS_CONFIG = [
+            {
+                id: "book-mahima",
+                title: "મહિમા સાથે નિશ્ચય શા માટે ?",
+                category: "સત્સંગ કથા અને પ્રશ્નોત્તરી",
+                description: "લોયાધામમાં શ્રીજી મહારાજ અને સંતો-ભક્તો વચ્ચે થયેલ મહિમા સભર સંવાદ.",
+                xmlPath: "books/mahima.xml"
+            },
+            {
+                id: "book-vachanamrut",
+                title: "વચનામૃત",
+                category: "શ્રીજી મહારાજના વચનામૃત",
+                description: "પરથારો તેમજ ગઢડા પ્રથમ પ્રકરણના વચનામૃતો (પેટા-પ્રકરણ સાથે).",
+                xmlPath: "books/vachanamrut.xml"
+            }
+            // તમારા `books/` ફોલ્ડરની બીજી XML ફાઇલો અહીં નીચે ઉમેરો:
+            // {
+            //     id: "book-3",
+            //     title: "ભક્તચિંતામણી",
+            //     category: "સંપ્રદાય ગ્રંથ",
+            //     description: "શ્રી નિષ્કુળાનંદ સ્વામી રચિત ભક્તચિંતામણી ગ્રંથ.",
+            //     xmlPath: "books/bhaktachintamani.xml"
+            // }
         ];
 
-        // Sample 1: Direct <chapter> -> <content> structure
-        const SAMPLE_XML_1 = `
+        /***********************************************************************
+         * FALLBACK SAMPLE XML DATA (ફક્ત અહીં પ્રિવ્યૂ ચલાવવા માટે, જ્યારે GitHub પર
+         * `books/` ફોલ્ડર હાજર હશે ત્યારે સીધી તમારી જ XML ફાઇલ લોડ થશે)
+         ***********************************************************************/
+        const PREVIEW_FALLBACK_XML = {
+            "books/mahima.xml": `
 <chapters>
 <chapter>
 <chapter_name>મહિમા સાથે નિશ્ચય શા માટે ?</chapter_name>
@@ -467,11 +430,9 @@
 જ્યારે જીવ અંતરથી નિર્માની થઈને સંતના વચનમાં વિશ્વાસ રાખે છે, ત્યારે તેના અંતરમાં દિવ્ય શાંતિ અને આનંદનો અનુભવ થાય છે. આવા સત્સંગનો મહિમા વાણીથી વર્ણવી શકાય તેવો નથી. ]]>
 </content>
 </chapter>
-</chapters>`;
+</chapters>`,
 
-        // Sample 2: Nested <chapter> -> <sub_chapter> -> <sub_chapter_name> & <content>
-        // Also includes loose numbering text "1. <sub_chapter_name>" just like user's sample!
-        const SAMPLE_XML_2 = `
+            "books/vachanamrut.xml": `
 <chapters>
 <chapter>
 <chapter_name>પરથારો</chapter_name>
@@ -512,7 +473,8 @@
 </content>
 </sub_chapter>
 </chapter>
-</chapters>`;
+</chapters>`
+        };
 
         /***********************************************************************
          * 2. APPLICATION STATE
@@ -529,223 +491,83 @@
         };
 
         /***********************************************************************
-         * 3. ROBUST XML PARSER (Supports both XML structures & messy tags)
-         ***********************************************************************/
-        function parseBookXml(xmlString, bookMeta) {
-            const parser = new DOMParser();
-            // Clean potential stray characters before root <chapters>
-            let cleanedXml = xmlString.trim();
-            if (!cleanedXml.startsWith('<')) {
-                const firstTag = cleanedXml.indexOf('<');
-                if (firstTag !== -1) cleanedXml = cleanedXml.substring(firstTag);
-            }
-
-            const xmlDoc = parser.parseFromString(cleanedXml, "text/xml");
-            const parserError = xmlDoc.querySelector("parsererror");
-
-            if (parserError) {
-                // Fallback regex parser in case user XML has unclosed tags or loose ampersands
-                return fallbackRegexParseXml(cleanedXml, bookMeta);
-            }
-
-            const chapterNodes = Array.from(xmlDoc.getElementsByTagName("chapter"));
-            const parsedChapters = chapterNodes.map((chapNode, idx) => {
-                // Extract <chapter_name>
-                const chapNameNode = chapNode.querySelector(":scope > chapter_name") || chapNode.getElementsByTagName("chapter_name")[0];
-                const chapterName = chapNameNode ? chapNameNode.textContent.trim() : `પ્રકરણ ${idx + 1}`;
-
-                // Check if <sub_chapter> exists inside this <chapter>
-                const subChapterNodes = Array.from(chapNode.getElementsByTagName("sub_chapter"));
-
-                if (subChapterNodes.length > 0) {
-                    const subChapters = subChapterNodes.map((subNode, sIdx) => {
-                        const subNameNode = subNode.getElementsByTagName("sub_chapter_name")[0];
-                        const contentNode = subNode.getElementsByTagName("content")[0];
-
-                        // Check if there is a prefix number before <sub_chapter_name> (like "1. <sub_chapter_name>")
-                        let prefixText = "";
-                        for (let child of subNode.childNodes) {
-                            if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) {
-                                prefixText = child.textContent.trim() + " ";
-                                break;
-                            }
-                            if (child.nodeName === "sub_chapter_name") break;
-                        }
-
-                        let rawSubName = subNameNode ? subNameNode.textContent.replace(/\s+/g, ' ').trim() : `પેટા-પ્રકરણ ${sIdx + 1}`;
-                        // Avoid duplicating prefix if already inside sub_chapter_name
-                        let finalSubName = (prefixText && !rawSubName.startsWith(prefixText.trim())) 
-                            ? (prefixText + rawSubName) 
-                            : rawSubName;
-
-                        let contentText = contentNode ? contentNode.textContent.trim() : "";
-
-                        return {
-                            title: finalSubName,
-                            content: contentText
-                        };
-                    });
-
-                    return {
-                        title: chapterName,
-                        hasSubChapters: true,
-                        subChapters: subChapters,
-                        content: null
-                    };
-                } else {
-                    // Direct chapter content without sub-chapters
-                    const contentNode = chapNode.getElementsByTagName("content")[0];
-                    const contentText = contentNode ? contentNode.textContent.trim() : "";
-
-                    return {
-                        title: chapterName,
-                        hasSubChapters: false,
-                        subChapters: [],
-                        content: contentText
-                    };
-                }
-            });
-
-            const hasAnySubChapters = parsedChapters.some(c => c.hasSubChapters);
-
-            return {
-                id: bookMeta.id || 'book-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-                title: bookMeta.title,
-                category: bookMeta.category || (hasAnySubChapters ? 'પ્રકરણ અને પેટા-પ્રકરણ ગ્રંથ' : 'સત્સંગ પુસ્તક'),
-                description: bookMeta.description || '',
-                colorTheme: bookMeta.colorTheme || 'amber',
-                chapters: parsedChapters,
-                hasNestedStructure: hasAnySubChapters
-            };
-        }
-
-        // Fallback parser if XML has unescaped characters or incomplete tags
-        function fallbackRegexParseXml(rawXml, bookMeta) {
-            const chapters = [];
-            const chapterRegex = /<chapter>([\s\S]*?)<\/chapter>/gi;
-            let chapMatch;
-            let idx = 1;
-
-            while ((chapMatch = chapterRegex.exec(rawXml)) !== null) {
-                const chapBlock = chapMatch[1];
-                const nameMatch = chapBlock.match(/<chapter_name>([\s\S]*?)<\/chapter_name>/i);
-                const chapterName = nameMatch ? nameMatch[1].trim() : `પ્રકરણ ${idx++}`;
-
-                const subChapterRegex = /<sub_chapter>([\s\S]*?)<\/sub_chapter>/gi;
-                const subChapters = [];
-                let subMatch;
-
-                while ((subMatch = subChapterRegex.exec(chapBlock)) !== null) {
-                    const subBlock = subMatch[1];
-                    const subNameMatch = subBlock.match(/<sub_chapter_name>([\s\S]*?)<\/sub_chapter_name>/i);
-                    const subContentMatch = subBlock.match(/<content>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([\s\S]*?))\s*<\/content>/i);
-
-                    const subTitle = subNameMatch ? subNameMatch[1].replace(/\s+/g, ' ').trim() : `પેટા-પ્રકરણ ${subChapters.length + 1}`;
-                    const subContent = subContentMatch ? (subContentMatch[1] || subContentMatch[2] || '').trim() : '';
-
-                    subChapters.push({ title: subTitle, content: subContent });
-                }
-
-                if (subChapters.length > 0) {
-                    chapters.push({
-                        title: chapterName,
-                        hasSubChapters: true,
-                        subChapters: subChapters,
-                        content: null
-                    });
-                } else {
-                    const contentMatch = chapBlock.match(/<content>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([\s\S]*?))\s*<\/content>/i);
-                    const content = contentMatch ? (contentMatch[1] || contentMatch[2] || '').trim() : '';
-                    chapters.push({
-                        title: chapterName,
-                        hasSubChapters: false,
-                        subChapters: [],
-                        content: content
-                    });
-                }
-            }
-
-            return {
-                id: bookMeta.id || 'book-' + Date.now(),
-                title: bookMeta.title,
-                category: bookMeta.category || 'સત્સંગ ગ્રંથ',
-                description: bookMeta.description || '',
-                colorTheme: bookMeta.colorTheme || 'amber',
-                chapters: chapters,
-                hasNestedStructure: chapters.some(c => c.hasSubChapters)
-            };
-        }
-
-        /***********************************************************************
-         * 4. INITIALIZATION & LOCAL XML UPLOAD HANDLER
+         * 4. INITIALIZATION & AUTOMATIC LOADING FROM `books/` FOLDER
          ***********************************************************************/
         async function initApp() {
-            // Load the two default books from the user's examples
-            const book1 = parseBookXml(SAMPLE_XML_1, {
-                id: 'mahima-book',
-                title: 'મહિમા સાથે નિશ્ચય શા માટે ?',
-                category: 'સત્સંગ કથા અને પ્રશ્નોત્તરી',
-                description: 'લોયાધામમાં શ્રીજી મહારાજ અને સંતો-ભક્તો વચ્ચે થયેલ મહિમા સભર સંવાદ.',
-                colorTheme: 'orange'
-            });
+            setTheme('sepia');
+            const loadingEl = document.getElementById('loading-state');
+            const booksViewEl = document.getElementById('view-books');
 
-            const book2 = parseBookXml(SAMPLE_XML_2, {
-                id: 'vachanamrut-book',
-                title: 'વચનામૃત (ગઢડા પ્રથમ પ્રકરણ)',
-                category: 'શ્રીજી મહારાજના વચનામૃત',
-                description: 'પરથારો તેમજ ગઢડા પ્રથમ પ્રકરણના વચનામૃતો (પેટા-પ્રકરણ સાથે).',
-                colorTheme: 'amber'
-            });
+            loadingEl.classList.remove('hidden');
+            booksViewEl.classList.add('hidden');
+            lucide.createIcons();
 
-            booksLibrary = [book1, book2];
+            let bookManifestList = [...BOOKS_CONFIG];
 
-            // Load any configured external XML files (for GitHub Pages deployment)
-            for (const extConfig of EXTERNAL_BOOKS_CONFIG) {
+            // 1. Optional: Try loading `books/books.json` if the user created a manifest file
+            try {
+                const manifestResp = await fetch('books/books.json', { cache: 'no-cache' });
+                if (manifestResp.ok) {
+                    const jsonList = await manifestResp.json();
+                    if (Array.isArray(jsonList) && jsonList.length > 0) {
+                        bookManifestList = jsonList;
+                    }
+                }
+            } catch (e) {
+                // Ignore if books/books.json does not exist
+            }
+
+            // 2. Optional: If GITHUB_CONFIG has username & repo, auto-discover all .xml files in `books/` folder via GitHub API
+            if (GITHUB_CONFIG.username && GITHUB_CONFIG.repo) {
                 try {
-                    const response = await fetch(extConfig.xmlUrl);
-                    if (response.ok) {
-                        const xmlText = await response.text();
-                        const parsedExtBook = parseBookXml(xmlText, extConfig);
-                        booksLibrary.push(parsedExtBook);
+                    const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.folder}?ref=${GITHUB_CONFIG.branch || 'main'}`;
+                    const ghResp = await fetch(apiUrl);
+                    if (ghResp.ok) {
+                        const files = await ghResp.json();
+                        const xmlFiles = files.filter(f => f.name && f.name.toLowerCase().endsWith('.xml'));
+                        if (xmlFiles.length > 0) {
+                            bookManifestList = xmlFiles.map((file, idx) => ({
+                                id: `gh-book-${idx}`,
+                                title: decodeURIComponent(file.name.replace(/\.xml$/i, '').replace(/[-_]/g, ' ')),
+                                category: 'સત્સંગ ગ્રંથ',
+                                description: '',
+                                xmlPath: `${GITHUB_CONFIG.folder}/${file.name}`
+                            }));
+                        }
                     }
                 } catch (err) {
-                    console.warn("Could not load external XML:", extConfig.xmlUrl, err);
+                    console.warn("GitHub API auto-discovery skipped:", err);
                 }
             }
 
-            setTheme('sepia');
-            renderApp();
-        }
+            // 3. Fetch each XML file from the `books/` folder
+            const loadedBooks = [];
+            for (const bookMeta of bookManifestList) {
+                let xmlText = null;
 
-        // Handle user uploading their own .xml files in the browser
-        function handleLocalXmlUpload(event) {
-            const files = Array.from(event.target.files);
-            if (!files.length) return;
-
-            let loadedCount = 0;
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const xmlContent = e.target.result;
-                    const cleanFileName = file.name.replace(/\.xml$/i, '');
-                    const newBook = parseBookXml(xmlContent, {
-                        title: cleanFileName,
-                        category: 'અપલોડ કરેલ XML પુસ્તક',
-                        description: `ફાઇલ: ${file.name} માંથી લોડ કરેલ ગ્રંથ.`
-                    });
-
-                    booksLibrary.unshift(newBook);
-                    loadedCount++;
-
-                    if (loadedCount === files.length) {
-                        navigateToHome();
-                        showToast(`"${cleanFileName}" XML ફાઇલ સફળતાપૂર્વક ઉમેરાઈ ગઈ છે! તેના પર ક્લિક કરીને વાંચો.`);
+                try {
+                    const response = await fetch(bookMeta.xmlPath, { cache: 'no-cache' });
+                    if (response.ok) {
+                        xmlText = await response.text();
                     }
-                };
-                reader.readAsText(file);
-            });
+                } catch (fetchErr) {
+                    // Fetch failed (e.g., running in live preview without actual `books/` folder yet)
+                }
 
-            event.target.value = '';
+                // Fallback to built-in preview XML only if local/GitHub file wasn't found in preview
+                if (!xmlText && PREVIEW_FALLBACK_XML[bookMeta.xmlPath]) {
+                    xmlText = PREVIEW_FALLBACK_XML[bookMeta.xmlPath];
+                }
+
+                if (xmlText) {
+                    const parsedBook = parseBookXml(xmlText, bookMeta);
+                    loadedBooks.push(parsedBook);
+                }
+            }
+
+            booksLibrary = loadedBooks;
+            loadingEl.classList.add('hidden');
+            renderApp();
         }
 
         /***********************************************************************
@@ -1223,10 +1045,6 @@
             document.body.removeChild(tempArea);
 
             showToast('આ પ્રકરણનું લખાણ કોપી થઈ ગયું છે!');
-        }
-
-        function toggleGitHubModal(show) {
-            document.getElementById('github-modal').classList.toggle('hidden', !show);
         }
 
         function showToast(msg) {
