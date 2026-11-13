@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="gu" class="theme-sepia">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>સત્સંગ પુસ્તકાલય - ડિજિટલ ગ્રંથાલય</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for Gujarati Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700&family=Noto+Serif+Gujarati:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Theme Variables */
+        :root, html.theme-sepia {
+            --bg-primary: #fdf8f2;
+            --bg-secondary: #f4ebe1;
+            --bg-card: #ffffff;
+            --text-primary: #2c1e16;
+            --text-secondary: #6e5544;
+            --accent-primary: #c85a17;
+            --accent-light: #fef0e6;
+            --border-color: #e6d7c3;
+            --reader-bg: #fbf5ec;
+        }
+
+        html.theme-light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-primary: #d97706;
+            --accent-light: #fef3c7;
+            --border-color: #e2e8f0;
+            --reader-bg: #ffffff;
+        }
+
+        html.theme-dark {
+            --bg-primary: #12161f;
+            --bg-secondary: #1e2433;
+            --bg-card: #1a202c;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-primary: #f59e0b;
+            --accent-light: #2d2318;
+            --border-color: #2d3748;
+            --reader-bg: #171c26;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Noto Sans Gujarati', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .font-serif-gu {
+            font-family: 'Noto Serif Gujarati', serif;
+        }
+
+        .font-sans-gu {
+            font-family: 'Noto Sans Gujarati', sans-serif;
+        }
+
+        /* Custom UI Classes mapped to Theme Variables */
+        .theme-bg-primary { background-color: var(--bg-primary); }
+        .theme-bg-secondary { background-color: var(--bg-secondary); }
+        .theme-bg-card { background-color: var(--bg-card); }
+        .theme-reader-bg { background-color: var(--reader-bg); }
+        .theme-text-primary { color: var(--text-primary); }
+        .theme-text-secondary { color: var(--text-secondary); }
+        .theme-accent-bg { background-color: var(--accent-primary); }
+        .theme-accent-text { color: var(--accent-primary); }
+        .theme-accent-light { background-color: var(--accent-light); }
+        .theme-border { border-color: var(--border-color); }
+
+        /* Decorative Spiritual Border */
+        .spiritual-header-gradient {
+            background: linear-gradient(90deg, #b45309 0%, #d97706 50%, #b45309 100%);
+        }
+
+        /* Book Cover Styling */
+        .book-spine {
+            background: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.15) 100%);
+        }
+
+        /* Smooth Scroll & Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        html.theme-dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        /* Reader Typography formatting */
+        .reader-content p {
+            margin-bottom: 1.25em;
+            text-align: justify;
+        }
+        .reader-content .shloka-highlight {
+            background-color: var(--accent-light);
+            border-left: 4px solid var(--accent-primary);
+            padding: 1rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-white">
+
+    <!-- Top Spiritual Accent Bar -->
+    <div class="h-1.5 w-full spiritual-header-gradient"></div>
+
+    <!-- Sticky Navigation Header -->
+    <header class="sticky top-0 z-30 theme-bg-card border-b theme-border shadow-sm transition-colors duration-300">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Brand / Home Logo -->
+            <div onclick="navigateToHome()" class="flex items-center gap-3 cursor-pointer group">
+                <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight theme-text-primary flex items-center gap-2">
+                        સત્સંગ પુસ્તકાલય
+                        <span class="text-xs px-2 py-0.5 rounded-full theme-accent-light theme-accent-text font-medium hidden sm:inline-block">XML Reader</span>
+                    </h1>
+                    <p class="text-xs theme-text-secondary">ડિજિટલ આધ્યાત્મિક ગ્રંથો અને વાંચન</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons & Theme Controls -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Upload / Test Local XML Button -->
+                <label for="xml-upload-input" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium theme-accent-light theme-accent-text hover:opacity-90 transition border theme-border shadow-sm" title="તમારી પોતાની XML ફાઇલ અહીં ટેસ્ટ કરો">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    <span>XML ટેસ્ટ કરો</span>
+                    <input id="xml-upload-input" type="file" accept=".xml" multiple class="hidden" onchange="handleLocalXmlUpload(event)">
+                </label>
+
+                <!-- GitHub Guide Modal Button -->
+                <button onclick="toggleGitHubModal(true)" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium theme-bg-secondary theme-text-primary hover:opacity-80 transition border theme-border" title="GitHub પર કેવી રીતે મૂકવું તેની માહિતી">
+                    <i data-lucide="github" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">GitHub માહિતી</span>
+                </button>
+
+                <!-- Theme Switcher -->
+                <div class="flex items-center rounded-xl p-1 theme-bg-secondary border theme-border">
+                    <button onclick="setTheme('light')" id="btn-theme-light" class="p-1.5 rounded-lg text-xs font-medium transition" title="લાઇટ મોડ (Light)">
+                        <i data-lucide="sun" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="setTheme('sepia')" id="btn-theme-sepia" class="p-1.5 rounded-lg text-xs font-medium transition" title="સેપિયા મોડ (Warm Reading)">
+                        <i data-lucide="coffee" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="setTheme('dark')" id="btn-theme-dark" class="p-1.5 rounded-lg text-xs font-medium transition" title="ડાર્ક મોડ (Night)">
+                        <i data-lucide="moon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Bar: Breadcrumbs & Search -->
+        <div class="theme-bg-secondary border-t theme-border">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                
+                <!-- Dynamic Breadcrumb Navigation -->
+                <nav id="breadcrumb-nav" aria-label="Breadcrumb" class="flex items-center flex-wrap gap-1 text-xs sm:text-sm">
+                    <!-- Populated via JS -->
+                </nav>
+
+                <!-- Context Search Box -->
+                <div id="search-container" class="relative w-full sm:w-64 md:w-72">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 theme-text-secondary pointer-events-none"></i>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        oninput="handleSearch(this.value)"
+                        placeholder="પુસ્તક અથવા પ્રકરણ શોધો..." 
+                        class="w-full pl-9 pr-8 py-1.5 rounded-xl text-xs sm:text-sm theme-bg-card theme-text-primary border theme-border focus:outline-none focus:ring-2 focus:ring-amber-500 transition"
+                    >
+                    <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 theme-text-secondary hover:theme-text-primary">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Workspace -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        
+        <!-- Notification Banner for Uploaded XML or Status -->
+        <div id="toast-banner" class="hidden mb-6 p-4 rounded-2xl theme-accent-light border theme-border flex items-center justify-between gap-3 shadow-sm">
+            <div class="flex items-center gap-3">
+                <i data-lucide="check-circle-2" class="w-5 h-5 theme-accent-text shrink-0"></i>
+                <p id="toast-message" class="text-sm font-medium theme-text-primary"></p>
+            </div>
+            <button onclick="hideToast()" class="theme-text-secondary hover:theme-text-primary">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- VIEW 1: BOOKS LIBRARY GRID -->
+        <section id="view-books" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b theme-border pb-4">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold font-serif-gu theme-text-primary">ગ્રંથો અને પુસ્તકો</h2>
+                    <p class="text-sm theme-text-secondary mt-0.5">વાંચવા માટે નીચે આપેલા કોઈપણ પુસ્તક પર ક્લિક કરો</p>
+                </div>
+                <div class="text-xs theme-text-secondary flex items-center gap-2">
+                    <span id="books-count-badge" class="px-2.5 py-1 rounded-full theme-bg-secondary border theme-border font-medium">કુલ 2 પુસ્તકો</span>
+                </div>
+            </div>
+
+            <!-- Books Grid Container -->
+            <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- VIEW 2: CHAPTERS LIST -->
+        <section id="view-chapters" class="hidden space-y-6">
+            <!-- Book Header Banner -->
+            <div class="p-5 sm:p-6 rounded-2xl theme-bg-card border theme-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                    <button onclick="navigateToHome()" class="mt-1 p-2 rounded-xl theme-bg-secondary hover:opacity-80 transition border theme-border" title="પાછા જાઓ">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <div>
+                        <span id="current-book-type-badge" class="text-xs px-2.5 py-0.5 rounded-full theme-accent-light theme-accent-text font-medium">અનુક્રમણિકા</span>
+                        <h2 id="current-book-title" class="text-xl sm:text-2xl font-bold font-serif-gu mt-1 theme-text-primary"></h2>
+                        <p id="current-book-subtitle" class="text-xs sm:text-sm theme-text-secondary mt-0.5"></p>
+                    </div>
+                </div>
+                <div class="text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl theme-bg-secondary border theme-border shrink-0">
+                    કુલ પ્રકરણો: <span id="chapters-total-count" class="theme-accent-text font-bold">0</span>
+                </div>
+            </div>
+
+            <!-- Chapters List Container -->
+            <div id="chapters-list" class="grid grid-cols-1 gap-3">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- VIEW 3: SUB-CHAPTERS LIST (Shown only if chapter has <sub_chapter> tags) -->
+        <section id="view-subchapters" class="hidden space-y-6">
+            <div class="p-5 sm:p-6 rounded-2xl theme-bg-card border theme-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                    <button onclick="navigateBackToChapters()" class="mt-1 p-2 rounded-xl theme-bg-secondary hover:opacity-80 transition border theme-border" title="પ્રકરણ લિસ્ટ પર પાછા જાઓ">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <div>
+                        <span id="subchapter-parent-book" class="text-xs font-medium theme-accent-text"></span>
+                        <h2 id="current-chapter-title" class="text-xl sm:text-2xl font-bold font-serif-gu mt-0.5 theme-text-primary"></h2>
+                        <p class="text-xs sm:text-sm theme-text-secondary mt-0.5">વાંચવા માટે નીચેનામાંથી પેટા-પ્રકરણ પસંદ કરો</p>
+                    </div>
+                </div>
+                <div class="text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl theme-bg-secondary border theme-border shrink-0">
+                    કુલ પેટા-પ્રકરણ: <span id="subchapters-total-count" class="theme-accent-text font-bold">0</span>
+                </div>
+            </div>
+
+            <!-- Sub-chapters List Container -->
+            <div id="subchapters-list" class="grid grid-cols-1 gap-3">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- VIEW 4: CONTENT READER VIEW -->
+        <section id="view-reader" class="hidden max-w-4xl mx-auto space-y-6">
+            
+            <!-- Reader Top Controls Toolbar -->
+            <div class="p-3 sm:p-4 rounded-2xl theme-bg-card border theme-border shadow-sm flex flex-wrap items-center justify-between gap-3">
+                <button id="reader-back-btn" onclick="handleReaderBack()" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium theme-bg-secondary hover:opacity-80 transition border theme-border">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span id="reader-back-text">યાદી પર પાછા જાઓ</span>
+                </button>
+
+                <!-- Typography Customization Controls -->
+                <div class="flex items-center flex-wrap gap-2">
+                    <!-- Font Family Toggle -->
+                    <button onclick="toggleReaderFontFamily()" id="font-family-btn" class="px-3 py-1.5 rounded-xl text-xs font-medium theme-bg-secondary border theme-border hover:opacity-80 transition" title="ફોન્ટ બદલો (Serif / Sans)">
+                        સેરિફ ફોન્ટ
+                    </button>
+
+                    <!-- Font Size Controls -->
+                    <div class="flex items-center rounded-xl theme-bg-secondary border theme-border p-0.5">
+                        <button onclick="changeFontSize(-2)" class="px-2.5 py-1 rounded-lg text-xs font-bold hover:theme-bg-card transition" title="અક્ષર નાના કરો">A-</button>
+                        <span id="font-size-label" class="px-2 text-xs theme-text-secondary">20px</span>
+                        <button onclick="changeFontSize(2)" class="px-2.5 py-1 rounded-lg text-sm font-bold hover:theme-bg-card transition" title="અક્ષર મોટા કરો">A+</button>
+                    </div>
+
+                    <!-- Copy Content Button -->
+                    <button onclick="copyReaderContent()" class="p-2 rounded-xl theme-bg-secondary border theme-border hover:opacity-80 transition" title="લખાણ કોપી કરો">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Reading Canvas / Paper -->
+            <article class="theme-reader-bg rounded-3xl border theme-border shadow-md p-6 sm:p-10 md:p-12 transition-colors duration-300">
+                <!-- Reader Header Metadata -->
+                <header class="border-b theme-border pb-6 mb-8 text-center">
+                    <div id="reader-meta-path" class="text-xs sm:text-sm font-medium theme-accent-text mb-2"></div>
+                    <h1 id="reader-title" class="text-2xl sm:text-3xl md:text-4xl font-bold font-serif-gu theme-text-primary leading-snug"></h1>
+                </header>
+
+                <!-- Parsed CDATA Content Body -->
+                <div id="reader-body" class="reader-content font-serif-gu leading-relaxed theme-text-primary transition-all duration-200" style="font-size: 20px; line-height: 1.9;">
+                    <!-- Populated via JS -->
+                </div>
+            </article>
+
+            <!-- Next / Previous Chapter or Subchapter Navigation Footer -->
+            <div class="flex items-center justify-between gap-4 pt-2 pb-8">
+                <button id="btn-prev-item" onclick="navigateAdjacentItem(-1)" class="flex-1 p-4 rounded-2xl theme-bg-card border theme-border shadow-sm hover:border-amber-500 transition flex items-center gap-3 text-left disabled:opacity-40 disabled:pointer-events-none">
+                    <div class="p-2 rounded-xl theme-bg-secondary shrink-0">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="block text-xs theme-text-secondary">અગાઉનું</span>
+                        <span id="prev-item-title" class="block text-sm font-semibold truncate theme-text-primary">-</span>
+                    </div>
+                </button>
+
+                <button id="btn-next-item" onclick="navigateAdjacentItem(1)" class="flex-1 p-4 rounded-2xl theme-bg-card border theme-border shadow-sm hover:border-amber-500 transition flex items-center justify-end gap-3 text-right disabled:opacity-40 disabled:pointer-events-none">
+                    <div class="overflow-hidden">
+                        <span class="block text-xs theme-text-secondary">આગળનું</span>
+                        <span id="next-item-title" class="block text-sm font-semibold truncate theme-text-primary">-</span>
+                    </div>
+                    <div class="p-2 rounded-xl theme-bg-secondary shrink-0">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- GitHub Hosting Setup Guide Modal -->
+    <div id="github-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-5">
+            <div class="flex items-center justify-between border-b theme-border pb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 rounded-xl theme-accent-light theme-accent-text">
+                        <i data-lucide="github" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-bold theme-text-primary">GitHub પર આ વેબ એપ કેવી રીતે મૂકવી?</h3>
+                </div>
+                <button onclick="toggleGitHubModal(false)" class="p-1.5 rounded-lg theme-bg-secondary hover:opacity-80">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-sm leading-relaxed theme-text-primary">
+                <p>તમે તમારી બધી જ XML ફાઇલોને GitHub Repository માં રાખીને મફતમાં <strong>GitHub Pages</strong> દ્વારા વેબસાઇટ ચલાવી શકો છો. તેના માટે નીચે મુજબ ફોલ્ડર સ્ટ્રક્ચર રાખો:</p>
+
+                <div class="p-4 rounded-2xl theme-bg-secondary border theme-border font-mono text-xs overflow-x-auto">
+<pre>my-satsang-library/
+├── index.html          (આ વેબ એપની ફાઇલ)
+├── books/              (તમારી બધી XML ફાઇલો અહીં મૂકો)
+│   ├── mahima.xml
+│   ├── vachanamrut.xml
+│   └── ...બીજી ફાઇલો.xml</pre>
+                </div>
+
+                <h4 class="font-bold text-base theme-accent-text pt-2">નવી XML ફાઇલ ઉમેરવાની રીત:</h4>
+                <p>આ <code>index.html</code> ફાઇલની અંદર જાવાસ્ક્રિપ્ટમાં <code>EXTERNAL_BOOKS_CONFIG</code> નામનું લિસ્ટ આપેલું છે. તેમાં ખાલી તમારી XML ફાઇલનું નામ અને પાથ નીચે મુજબ લખી દો:</p>
+
+                <div class="p-4 rounded-2xl theme-bg-secondary border theme-border font-mono text-xs overflow-x-auto">
+<pre>const EXTERNAL_BOOKS_CONFIG = [
+  {
+    id: "book-1",
+    title: "મહિમા સાથે નિશ્ચય શા માટે ?",
+    category: "સત્સંગ કથા",
+    xmlUrl: "books/mahima.xml"
+  },
+  {
+    id: "book-2",
+    title: "વચનામૃત",
+    category: "શ્રીજી મહારાજના વચનામૃત",
+    xmlUrl: "books/vachanamrut.xml"
+  }
+];</pre>
+                </div>
+
+                <div class="p-4 rounded-2xl theme-accent-light border theme-border text-xs sm:text-sm space-y-1">
+                    <p class="font-bold theme-accent-text">✨ ઓટોમેટિક XML ડિટેક્શન:</p>
+                    <p>તમારે એ ચિંતા કરવાની જરૂર નથી કે XML ફાઇલમાં <code>&lt;sub_chapter&gt;</code> છે કે નહીં! આ એપ આપોઆપ ચેક કરી લેશે:</p>
+                    <ul class="list-disc list-inside pl-2 space-y-1 pt-1">
+                        <li>જો ચેપ્ટરની અંદર <code>&lt;sub_chapter&gt;</code> હશે, તો પહેલા સબ-ચેપ્ટરનું લિસ્ટ બતાવશે.</li>
+                        <li>જો સીધું <code>&lt;content&gt;</code> હશે, તો ચેપ્ટર પર ક્લિક કરતાની સાથે જ સીધું વાંચન (Content) ખૂલી જશે!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="toggleGitHubModal(false)" class="px-5 py-2.5 rounded-xl theme-accent-bg text-white font-medium text-sm hover:opacity-90 transition">
+                    સમજાઈ ગયું, બંધ કરો
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t theme-border theme-bg-secondary py-5 mt-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs theme-text-secondary">
+            <p>સત્સંગ પુસ્તકાલય • ગુજરાતી XML બુક રીડર</p>
+            <p>Both Direct Chapter & Nested Sub-chapter XML Supported</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        /***********************************************************************
+         * 1. PRE-LOADED XML SAMPLES (From User's Exact Prompt Examples)
+         *    Plus support for fetching external XML files when hosted on GitHub!
+         ***********************************************************************/
+        
+        // To load additional XML files hosted on your GitHub repository, add their paths here:
+        const EXTERNAL_BOOKS_CONFIG = [
+            // Example when you put files on GitHub:
+            // { id: 'ext-1', title: 'ભક્તચિંતામણી', category: 'સંપ્રદાય ગ્રંથ', xmlUrl: 'books/bhaktachintamani.xml' }
+        ];
+
+        // Sample 1: Direct <chapter> -> <content> structure
+        const SAMPLE_XML_1 = `
+<chapters>
+<chapter>
+<chapter_name>મહિમા સાથે નિશ્ચય શા માટે ?</chapter_name>
+<content>
+<![CDATA[ “મહિમા સાથે નિશ્ચય શા માટે ?”
+
+હે વહાલા સંતો-ભક્તો ! આષાઢી સંવત ૧૮૭૭ ના કાર્તિક-વદ તેરસે લોયાધામમાં શ્રીહરિના સખા ભક્ત સુરા બાપુના દરબારગઢમાં રાત્રીએ સભામાં શ્રીજી મહારાજ ઢોલિયા ઉપર વિરાજમાન થયા હતા. તે સમયે તેઓની સાથે આગેવાન સંતો, નાના સંતો, આજુબાજુનાં ગામડાઓમાંથી આવેલ હરિભક્તો તેમજ લોયાગામના સત્સંગીઓ બેઠા હતા. ત્યારે ભગવદાનંદ સ્વામી અને શિવાનંદ સ્વામીએ મહારાજને પ્રશ્ન પૂછયો :
+
+“ પ્રશ્ન ”
+
+હે મહારાજ ! ભગવાનનો નિશ્ચય તો સત્સંગમાં ઘણાને હોય છે, પરંતુ મહિમા સહિત નિશ્ચય હોય ત્યારે ભક્તના વર્તનમાં શો ફેર પડે છે?
+
+ત્યારે શ્રીજી મહારાજે અતિશય પ્રસન્ન થઈને ઉત્તર આપ્યો જે, “જ્યારે ભક્તને ભગવાનનો મહિમા સહિત નિશ્ચય થાય છે ત્યારે તેને જગતના કોઈ પદાર્થમાં માલ મનાતો નથી અને અખંડ ભગવાનની મૂર્તિમાં જ વૃત્તિ રહે છે. માટે નિશ્ચયની સાથે ભગવાનનો અને સંતનો અપરંપાર મહિમા સમજવો તે અતિશે આવશ્યક છે.” ]]>
+</content>
+</chapter>
+<chapter>
+<chapter_name>સત્સંગનો અલૌકિક મહિમા</chapter_name>
+<content>
+<![CDATA[ “સત્સંગનો અલૌકિક મહિમા”
+
+ભગવાનના પ્રત્યક્ષ સ્વરૂપનો યોગ અને તેમના એકાંતિક સંતનો સમાગમ એ જ જીવના આત્યંતિક કલ્યાણનો રાજમાર્ગ છે. 
+
+જ્યારે જીવ અંતરથી નિર્માની થઈને સંતના વચનમાં વિશ્વાસ રાખે છે, ત્યારે તેના અંતરમાં દિવ્ય શાંતિ અને આનંદનો અનુભવ થાય છે. આવા સત્સંગનો મહિમા વાણીથી વર્ણવી શકાય તેવો નથી. ]]>
+</content>
+</chapter>
+</chapters>`;
+
+        // Sample 2: Nested <chapter> -> <sub_chapter> -> <sub_chapter_name> & <content>
+        // Also includes loose numbering text "1. <sub_chapter_name>" just like user's sample!
+        const SAMPLE_XML_2 = `
+<chapters>
+<chapter>
+<chapter_name>પરથારો</chapter_name>
+<sub_chapter>
+<sub_chapter_name>પરથારો</sub_chapter_name>
+<content>
+<![CDATA[ પરથારો
+
+पातुं धर्ममधर्ममुत्खयितुं श्रीभक्तिधर्मांतो, जातायोत्तरकोशलेषु दयया सर्वेश्वरेशाय च ।
+तृप्तिं वाक्यसुधारसैर्विदधते नैजैर्निजानां मुहु-स्तस्मै श्रीहरये नमोस्तु सहजानन्दाय सद्वर्णिने ।।१।।
+
+વચનામૃતની કુલ સંખ્યા ૨૭૩ ]]>
+</content>
+</sub_chapter>
+</chapter>
+<chapter>
+<chapter_name>ગઢડા પ્રથમ પ્રકરણ</chapter_name>
+<sub_chapter>
+1. <sub_chapter_name>ભગવત્સ્વરૂપમાં અખંડવૃત્તિ રાખવા
+</sub_chapter_name>
+<content>
+<![CDATA[ 1. ભગવત્સ્વરૂપમાં અખંડવૃત્તિ રાખવા	
+
+
+સંવત્ ૧૮૭૬ ના માગશર સુદિ ૪ ચતુર્થીને દિવસ શ્રીજીમહારાજ શ્રીગઢડા મધ્યે દાદાખાચરના દરબારમાં સાધુની જાયગાને વિષે રાત્રિને સમયે પધાર્યા હતા અને સર્વે શ્વેત વસ્ત્ર ધારણ કર્યાં હતાં અને પોતાના મુખારવિંદની આગળ સાધુ તથા દેશદેશના હરિભક્તની સભા ભરાઇને બેઠી હતી.
+
+પછી શ્રીજીમહારાજ બોલ્યા જે, “સર્વે હરિભક્ત સાંભળો, વાર્તા કરીએ છીએ જે, ભગવાનના ભક્તને ભગવાનના સ્વરૂપમાં અખંડ વૃત્તિ રાખવી. અને જો અખંડ વૃત્તિ ન રહે અને દેહ મૂકે તો પણ ભગવાનની કૃપાથી તેનું કલ્યાણ તો થાય છે, પણ જેવું અખંડ વૃત્તિવાળાનું થાય છે તેવું નથી થાતું.” ]]>
+</content>
+</sub_chapter>
+<sub_chapter>
+2. <sub_chapter_name>બંધન અને મોક્ષનું કારણ</sub_chapter_name>
+<content>
+<![CDATA[ 2. બંધન અને મોક્ષનું કારણ
+
+સંવત્ ૧૮૭૬ ના માગશર સુદિ ૫ પંચમીને દિવસ શ્રીજીમહારાજ શ્રીગઢડા મધ્યે દાદાખાચરના દરબારમાં વિરાજમાન હતા. અને સર્વે શ્વેત વસ્ત્ર ધારણ કર્યાં હતાં.
+
+પછી શ્રીજીમહારાજ બોલ્યા જે, “જીવને બંધન અને મોક્ષનું કારણ તેનું મન જ છે. જો મન ભગવાનના સ્વરૂપમાં જોડાય તો પરમ પદને પામે છે.” ]]>
+</content>
+</sub_chapter>
+</chapter>
+</chapters>`;
+
+        /***********************************************************************
+         * 2. APPLICATION STATE
+         ***********************************************************************/
+        let booksLibrary = [];
+        let appState = {
+            view: 'books', // 'books' | 'chapters' | 'subchapters' | 'reader'
+            selectedBookIndex: null,
+            selectedChapterIndex: null,
+            selectedSubChapterIndex: null, // null if reading a direct chapter
+            searchQuery: '',
+            fontSize: 20,
+            isSerifFont: true
+        };
+
+        /***********************************************************************
+         * 3. ROBUST XML PARSER (Supports both XML structures & messy tags)
+         ***********************************************************************/
+        function parseBookXml(xmlString, bookMeta) {
+            const parser = new DOMParser();
+            // Clean potential stray characters before root <chapters>
+            let cleanedXml = xmlString.trim();
+            if (!cleanedXml.startsWith('<')) {
+                const firstTag = cleanedXml.indexOf('<');
+                if (firstTag !== -1) cleanedXml = cleanedXml.substring(firstTag);
+            }
+
+            const xmlDoc = parser.parseFromString(cleanedXml, "text/xml");
+            const parserError = xmlDoc.querySelector("parsererror");
+
+            if (parserError) {
+                // Fallback regex parser in case user XML has unclosed tags or loose ampersands
+                return fallbackRegexParseXml(cleanedXml, bookMeta);
+            }
+
+            const chapterNodes = Array.from(xmlDoc.getElementsByTagName("chapter"));
+            const parsedChapters = chapterNodes.map((chapNode, idx) => {
+                // Extract <chapter_name>
+                const chapNameNode = chapNode.querySelector(":scope > chapter_name") || chapNode.getElementsByTagName("chapter_name")[0];
+                const chapterName = chapNameNode ? chapNameNode.textContent.trim() : `પ્રકરણ ${idx + 1}`;
+
+                // Check if <sub_chapter> exists inside this <chapter>
+                const subChapterNodes = Array.from(chapNode.getElementsByTagName("sub_chapter"));
+
+                if (subChapterNodes.length > 0) {
+                    const subChapters = subChapterNodes.map((subNode, sIdx) => {
+                        const subNameNode = subNode.getElementsByTagName("sub_chapter_name")[0];
+                        const contentNode = subNode.getElementsByTagName("content")[0];
+
+                        // Check if there is a prefix number before <sub_chapter_name> (like "1. <sub_chapter_name>")
+                        let prefixText = "";
+                        for (let child of subNode.childNodes) {
+                            if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) {
+                                prefixText = child.textContent.trim() + " ";
+                                break;
+                            }
+                            if (child.nodeName === "sub_chapter_name") break;
+                        }
+
+                        let rawSubName = subNameNode ? subNameNode.textContent.replace(/\s+/g, ' ').trim() : `પેટા-પ્રકરણ ${sIdx + 1}`;
+                        // Avoid duplicating prefix if already inside sub_chapter_name
+                        let finalSubName = (prefixText && !rawSubName.startsWith(prefixText.trim())) 
+                            ? (prefixText + rawSubName) 
+                            : rawSubName;
+
+                        let contentText = contentNode ? contentNode.textContent.trim() : "";
+
+                        return {
+                            title: finalSubName,
+                            content: contentText
+                        };
+                    });
+
+                    return {
+                        title: chapterName,
+                        hasSubChapters: true,
+                        subChapters: subChapters,
+                        content: null
+                    };
+                } else {
+                    // Direct chapter content without sub-chapters
+                    const contentNode = chapNode.getElementsByTagName("content")[0];
+                    const contentText = contentNode ? contentNode.textContent.trim() : "";
+
+                    return {
+                        title: chapterName,
+                        hasSubChapters: false,
+                        subChapters: [],
+                        content: contentText
+                    };
+                }
+            });
+
+            const hasAnySubChapters = parsedChapters.some(c => c.hasSubChapters);
+
+            return {
+                id: bookMeta.id || 'book-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+                title: bookMeta.title,
+                category: bookMeta.category || (hasAnySubChapters ? 'પ્રકરણ અને પેટા-પ્રકરણ ગ્રંથ' : 'સત્સંગ પુસ્તક'),
+                description: bookMeta.description || '',
+                colorTheme: bookMeta.colorTheme || 'amber',
+                chapters: parsedChapters,
+                hasNestedStructure: hasAnySubChapters
+            };
+        }
+
+        // Fallback parser if XML has unescaped characters or incomplete tags
+        function fallbackRegexParseXml(rawXml, bookMeta) {
+            const chapters = [];
+            const chapterRegex = /<chapter>([\s\S]*?)<\/chapter>/gi;
+            let chapMatch;
+            let idx = 1;
+
+            while ((chapMatch = chapterRegex.exec(rawXml)) !== null) {
+                const chapBlock = chapMatch[1];
+                const nameMatch = chapBlock.match(/<chapter_name>([\s\S]*?)<\/chapter_name>/i);
+                const chapterName = nameMatch ? nameMatch[1].trim() : `પ્રકરણ ${idx++}`;
+
+                const subChapterRegex = /<sub_chapter>([\s\S]*?)<\/sub_chapter>/gi;
+                const subChapters = [];
+                let subMatch;
+
+                while ((subMatch = subChapterRegex.exec(chapBlock)) !== null) {
+                    const subBlock = subMatch[1];
+                    const subNameMatch = subBlock.match(/<sub_chapter_name>([\s\S]*?)<\/sub_chapter_name>/i);
+                    const subContentMatch = subBlock.match(/<content>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([\s\S]*?))\s*<\/content>/i);
+
+                    const subTitle = subNameMatch ? subNameMatch[1].replace(/\s+/g, ' ').trim() : `પેટા-પ્રકરણ ${subChapters.length + 1}`;
+                    const subContent = subContentMatch ? (subContentMatch[1] || subContentMatch[2] || '').trim() : '';
+
+                    subChapters.push({ title: subTitle, content: subContent });
+                }
+
+                if (subChapters.length > 0) {
+                    chapters.push({
+                        title: chapterName,
+                        hasSubChapters: true,
+                        subChapters: subChapters,
+                        content: null
+                    });
+                } else {
+                    const contentMatch = chapBlock.match(/<content>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([\s\S]*?))\s*<\/content>/i);
+                    const content = contentMatch ? (contentMatch[1] || contentMatch[2] || '').trim() : '';
+                    chapters.push({
+                        title: chapterName,
+                        hasSubChapters: false,
+                        subChapters: [],
+                        content: content
+                    });
+                }
+            }
+
+            return {
+                id: bookMeta.id || 'book-' + Date.now(),
+                title: bookMeta.title,
+                category: bookMeta.category || 'સત્સંગ ગ્રંથ',
+                description: bookMeta.description || '',
+                colorTheme: bookMeta.colorTheme || 'amber',
+                chapters: chapters,
+                hasNestedStructure: chapters.some(c => c.hasSubChapters)
+            };
+        }
+
+        /***********************************************************************
+         * 4. INITIALIZATION & LOCAL XML UPLOAD HANDLER
+         ***********************************************************************/
+        async function initApp() {
+            // Load the two default books from the user's examples
+            const book1 = parseBookXml(SAMPLE_XML_1, {
+                id: 'mahima-book',
+                title: 'મહિમા સાથે નિશ્ચય શા માટે ?',
+                category: 'સત્સંગ કથા અને પ્રશ્નોત્તરી',
+                description: 'લોયાધામમાં શ્રીજી મહારાજ અને સંતો-ભક્તો વચ્ચે થયેલ મહિમા સભર સંવાદ.',
+                colorTheme: 'orange'
+            });
+
+            const book2 = parseBookXml(SAMPLE_XML_2, {
+                id: 'vachanamrut-book',
+                title: 'વચનામૃત (ગઢડા પ્રથમ પ્રકરણ)',
+                category: 'શ્રીજી મહારાજના વચનામૃત',
+                description: 'પરથારો તેમજ ગઢડા પ્રથમ પ્રકરણના વચનામૃતો (પેટા-પ્રકરણ સાથે).',
+                colorTheme: 'amber'
+            });
+
+            booksLibrary = [book1, book2];
+
+            // Load any configured external XML files (for GitHub Pages deployment)
+            for (const extConfig of EXTERNAL_BOOKS_CONFIG) {
+                try {
+                    const response = await fetch(extConfig.xmlUrl);
+                    if (response.ok) {
+                        const xmlText = await response.text();
+                        const parsedExtBook = parseBookXml(xmlText, extConfig);
+                        booksLibrary.push(parsedExtBook);
+                    }
+                } catch (err) {
+                    console.warn("Could not load external XML:", extConfig.xmlUrl, err);
+                }
+            }
+
+            setTheme('sepia');
+            renderApp();
+        }
+
+        // Handle user uploading their own .xml files in the browser
+        function handleLocalXmlUpload(event) {
+            const files = Array.from(event.target.files);
+            if (!files.length) return;
+
+            let loadedCount = 0;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const xmlContent = e.target.result;
+                    const cleanFileName = file.name.replace(/\.xml$/i, '');
+                    const newBook = parseBookXml(xmlContent, {
+                        title: cleanFileName,
+                        category: 'અપલોડ કરેલ XML પુસ્તક',
+                        description: `ફાઇલ: ${file.name} માંથી લોડ કરેલ ગ્રંથ.`
+                    });
+
+                    booksLibrary.unshift(newBook);
+                    loadedCount++;
+
+                    if (loadedCount === files.length) {
+                        navigateToHome();
+                        showToast(`"${cleanFileName}" XML ફાઇલ સફળતાપૂર્વક ઉમેરાઈ ગઈ છે! તેના પર ક્લિક કરીને વાંચો.`);
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            event.target.value = '';
+        }
+
+        /***********************************************************************
+         * 5. NAVIGATION & VIEW CONTROLLERS
+         ***********************************************************************/
+        function navigateToHome() {
+            appState.view = 'books';
+            appState.selectedBookIndex = null;
+            appState.selectedChapterIndex = null;
+            appState.selectedSubChapterIndex = null;
+            clearSearch(false);
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function selectBook(bookIndex) {
+            appState.selectedBookIndex = bookIndex;
+            appState.selectedChapterIndex = null;
+            appState.selectedSubChapterIndex = null;
+            appState.view = 'chapters';
+            clearSearch(false);
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function selectChapter(chapterIndex) {
+            const book = booksLibrary[appState.selectedBookIndex];
+            const chapter = book.chapters[chapterIndex];
+            appState.selectedChapterIndex = chapterIndex;
+            clearSearch(false);
+
+            // CORE REQUIREMENT:
+            // If chapter has <sub_chapter> items -> show Sub-chapter list
+            // Otherwise -> directly open Reader Content!
+            if (chapter.hasSubChapters && chapter.subChapters.length > 0) {
+                appState.selectedSubChapterIndex = null;
+                appState.view = 'subchapters';
+            } else {
+                appState.selectedSubChapterIndex = null;
+                appState.view = 'reader';
+            }
+
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function selectSubChapter(subChapterIndex) {
+            appState.selectedSubChapterIndex = subChapterIndex;
+            appState.view = 'reader';
+            clearSearch(false);
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function navigateBackToChapters() {
+            appState.selectedSubChapterIndex = null;
+            appState.view = 'chapters';
+            clearSearch(false);
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleReaderBack() {
+            const book = booksLibrary[appState.selectedBookIndex];
+            const chapter = book.chapters[appState.selectedChapterIndex];
+            if (chapter && chapter.hasSubChapters) {
+                appState.view = 'subchapters';
+            } else {
+                appState.view = 'chapters';
+            }
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Next / Previous item navigation in Reader View
+        function navigateAdjacentItem(direction) {
+            const book = booksLibrary[appState.selectedBookIndex];
+            const chapter = book.chapters[appState.selectedChapterIndex];
+
+            if (chapter.hasSubChapters) {
+                const nextSubIdx = appState.selectedSubChapterIndex + direction;
+                if (nextSubIdx >= 0 && nextSubIdx < chapter.subChapters.length) {
+                    selectSubChapter(nextSubIdx);
+                }
+            } else {
+                const nextChapIdx = appState.selectedChapterIndex + direction;
+                if (nextChapIdx >= 0 && nextChapIdx < book.chapters.length) {
+                    selectChapter(nextChapIdx);
+                }
+            }
+        }
+
+        /***********************************************************************
+         * 6. UI RENDERING FUNCTIONS
+         ***********************************************************************/
+        function renderApp() {
+            // Toggle main view sections
+            document.getElementById('view-books').classList.toggle('hidden', appState.view !== 'books');
+            document.getElementById('view-chapters').classList.toggle('hidden', appState.view !== 'chapters');
+            document.getElementById('view-subchapters').classList.toggle('hidden', appState.view !== 'subchapters');
+            document.getElementById('view-reader').classList.toggle('hidden', appState.view !== 'reader');
+
+            // Hide search bar in reader view to keep focus clean
+            document.getElementById('search-container').classList.toggle('hidden', appState.view === 'reader');
+
+            renderBreadcrumbs();
+
+            if (appState.view === 'books') renderBooksView();
+            else if (appState.view === 'chapters') renderChaptersView();
+            else if (appState.view === 'subchapters') renderSubChaptersView();
+            else if (appState.view === 'reader') renderReaderView();
+
+            lucide.createIcons();
+        }
+
+        function renderBreadcrumbs() {
+            const nav = document.getElementById('breadcrumb-nav');
+            const crumbs = [];
+
+            // Home Crumb
+            crumbs.push(`
+                <button onclick="navigateToHome()" class="inline-flex items-center gap-1.5 font-medium ${appState.view === 'books' ? 'theme-accent-text font-bold' : 'theme-text-secondary hover:theme-text-primary'}">
+                    <i data-lucide="library" class="w-3.5 h-3.5"></i>
+                    <span>પુસ્તકાલય</span>
+                </button>
+            `);
+
+            if (appState.selectedBookIndex !== null) {
+                const book = booksLibrary[appState.selectedBookIndex];
+                crumbs.push(`<i data-lucide="chevron-right" class="w-3.5 h-3.5 theme-text-secondary"></i>`);
+                crumbs.push(`
+                    <button onclick="selectBook(${appState.selectedBookIndex})" class="truncate max-w-[160px] sm:max-w-[240px] ${appState.view === 'chapters' ? 'theme-accent-text font-bold' : 'theme-text-secondary hover:theme-text-primary'}">
+                        ${escapeHtml(book.title)}
+                    </button>
+                `);
+
+                if (appState.selectedChapterIndex !== null) {
+                    const chapter = book.chapters[appState.selectedChapterIndex];
+                    crumbs.push(`<i data-lucide="chevron-right" class="w-3.5 h-3.5 theme-text-secondary"></i>`);
+                    crumbs.push(`
+                        <button onclick="selectChapter(${appState.selectedChapterIndex})" class="truncate max-w-[160px] sm:max-w-[240px] ${(appState.view === 'subchapters' || (appState.view === 'reader' && !chapter.hasSubChapters)) ? 'theme-accent-text font-bold' : 'theme-text-secondary hover:theme-text-primary'}">
+                            ${escapeHtml(chapter.title)}
+                        </button>
+                    `);
+
+                    if (appState.selectedSubChapterIndex !== null && chapter.hasSubChapters) {
+                        const sub = chapter.subChapters[appState.selectedSubChapterIndex];
+                        crumbs.push(`<i data-lucide="chevron-right" class="w-3.5 h-3.5 theme-text-secondary"></i>`);
+                        crumbs.push(`
+                            <span class="truncate max-w-[160px] sm:max-w-[240px] theme-accent-text font-bold">
+                                ${escapeHtml(sub.title)}
+                            </span>
+                        `);
+                    }
+                }
+            }
+
+            nav.innerHTML = crumbs.join('');
+        }
+
+        function renderBooksView() {
+            const grid = document.getElementById('books-grid');
+            const query = appState.searchQuery.toLowerCase();
+
+            const filteredBooks = booksLibrary
+                .map((book, index) => ({ book, index }))
+                .filter(({ book }) => 
+                    book.title.toLowerCase().includes(query) || 
+                    book.category.toLowerCase().includes(query) ||
+                    book.chapters.some(c => c.title.toLowerCase().includes(query))
+                );
+
+            document.getElementById('books-count-badge').textContent = `કુલ ${filteredBooks.length} પુસ્તકો`;
+
+            if (filteredBooks.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center theme-bg-card rounded-2xl border theme-border p-6">
+                        <i data-lucide="search-x" class="w-10 h-10 mx-auto theme-text-secondary mb-2"></i>
+                        <p class="font-semibold theme-text-primary">કોઈ પુસ્તક મળ્યું નથી</p>
+                        <p class="text-xs theme-text-secondary mt-1">અન્ય શબ્દ લખીને ફરી શોધો</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filteredBooks.map(({ book, index }) => {
+                const totalSubChapters = book.chapters.reduce((sum, c) => sum + (c.subChapters ? c.subChapters.length : 0), 0);
+                const structureLabel = book.hasNestedStructure 
+                    ? `${book.chapters.length} પ્રકરણ • ${totalSubChapters} પેટા-પ્રકરણ`
+                    : `${book.chapters.length} પ્રકરણો`;
+
+                return `
+                    <div onclick="selectBook(${index})" class="group cursor-pointer rounded-2xl theme-bg-card border theme-border p-5 shadow-sm hover:shadow-md hover:border-amber-500 transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
+                        <!-- Decorative top corner mandala accent -->
+                        <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full theme-accent-light opacity-60 group-hover:scale-125 transition-transform pointer-events-none"></div>
+
+                        <div class="flex items-start gap-4 relative z-10">
+                            <!-- Book 3D Cover Icon -->
+                            <div class="w-14 h-20 rounded-xl spiritual-header-gradient text-white flex flex-col items-center justify-center shadow-md shrink-0 relative overflow-hidden group-hover:scale-105 transition-transform">
+                                <div class="absolute left-0 top-0 bottom-0 w-2 book-spine"></div>
+                                <i data-lucide="book-marked" class="w-6 h-6"></i>
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <span class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full theme-accent-light theme-accent-text mb-1.5">
+                                    ${escapeHtml(book.category)}
+                                </span>
+                                <h3 class="text-lg font-bold font-serif-gu theme-text-primary group-hover:theme-accent-text transition line-clamp-2">
+                                    ${escapeHtml(book.title)}
+                                </h3>
+                                <p class="text-xs theme-text-secondary mt-1 line-clamp-2">
+                                    ${escapeHtml(book.description || 'આ ગ્રંથના પ્રકરણો વાંચવા માટે અહીં ક્લિક કરો.')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 pt-3 border-t theme-border flex items-center justify-between text-xs relative z-10">
+                            <span class="font-medium theme-text-secondary flex items-center gap-1.5">
+                                <i data-lucide="layers" class="w-3.5 h-3.5 theme-accent-text"></i>
+                                ${structureLabel}
+                            </span>
+                            <span class="font-semibold theme-accent-text inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                ખોલો <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderChaptersView() {
+            const book = booksLibrary[appState.selectedBookIndex];
+            if (!book) return navigateToHome();
+
+            document.getElementById('current-book-title').textContent = book.title;
+            document.getElementById('current-book-subtitle').textContent = book.description || book.category;
+            document.getElementById('chapters-total-count').textContent = book.chapters.length;
+
+            const query = appState.searchQuery.toLowerCase();
+            const listEl = document.getElementById('chapters-list');
+
+            const filteredChapters = book.chapters
+                .map((chap, idx) => ({ chap, idx }))
+                .filter(({ chap }) => 
+                    chap.title.toLowerCase().includes(query) ||
+                    (chap.subChapters && chap.subChapters.some(s => s.title.toLowerCase().includes(query)))
+                );
+
+            if (filteredChapters.length === 0) {
+                listEl.innerHTML = `
+                    <div class="py-12 text-center theme-bg-card rounded-2xl border theme-border p-6">
+                        <p class="font-semibold theme-text-primary">કોઈ પ્રકરણ મળ્યું નથી</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = filteredChapters.map(({ chap, idx }) => {
+                const badgeHtml = chap.hasSubChapters
+                    ? `<span class="text-xs px-2.5 py-1 rounded-xl theme-accent-light theme-accent-text font-medium flex items-center gap-1 shrink-0">
+                         <i data-lucide="list-tree" class="w-3.5 h-3.5"></i>
+                         ${chap.subChapters.length} પેટા-પ્રકરણ
+                       </span>`
+                    : `<span class="text-xs px-2.5 py-1 rounded-xl theme-bg-secondary theme-text-secondary font-medium flex items-center gap-1 shrink-0">
+                         <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                         સીધું વાંચન
+                       </span>`;
+
+                return `
+                    <div onclick="selectChapter(${idx})" class="group cursor-pointer p-4 sm:p-5 rounded-2xl theme-bg-card border theme-border hover:border-amber-500 shadow-sm hover:shadow transition flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <div class="w-9 h-9 rounded-xl theme-accent-light theme-accent-text font-bold text-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                ${idx + 1}
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-base sm:text-lg font-bold font-serif-gu theme-text-primary group-hover:theme-accent-text transition truncate">
+                                    ${escapeHtml(chap.title)}
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 shrink-0">
+                            ${badgeHtml}
+                            <i data-lucide="chevron-right" class="w-5 h-5 theme-text-secondary group-hover:theme-accent-text group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSubChaptersView() {
+            const book = booksLibrary[appState.selectedBookIndex];
+            const chapter = book?.chapters[appState.selectedChapterIndex];
+            if (!chapter) return navigateBackToChapters();
+
+            document.getElementById('subchapter-parent-book').textContent = book.title;
+            document.getElementById('current-chapter-title').textContent = chapter.title;
+            document.getElementById('subchapters-total-count').textContent = chapter.subChapters.length;
+
+            const query = appState.searchQuery.toLowerCase();
+            const listEl = document.getElementById('subchapters-list');
+
+            const filteredSubs = chapter.subChapters
+                .map((sub, idx) => ({ sub, idx }))
+                .filter(({ sub }) => sub.title.toLowerCase().includes(query) || sub.content.toLowerCase().includes(query));
+
+            if (filteredSubs.length === 0) {
+                listEl.innerHTML = `
+                    <div class="py-12 text-center theme-bg-card rounded-2xl border theme-border p-6">
+                        <p class="font-semibold theme-text-primary">કોઈ પેટા-પ્રકરણ મળ્યું નથી</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = filteredSubs.map(({ sub, idx }) => `
+                <div onclick="selectSubChapter(${idx})" class="group cursor-pointer p-4 sm:p-5 rounded-2xl theme-bg-card border theme-border hover:border-amber-500 shadow-sm hover:shadow transition flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg theme-bg-secondary theme-text-secondary font-semibold text-xs flex items-center justify-center shrink-0 group-hover:theme-accent-bg group-hover:text-white transition">
+                            ${idx + 1}
+                        </div>
+                        <h3 class="text-base sm:text-lg font-semibold font-serif-gu theme-text-primary group-hover:theme-accent-text transition">
+                            ${escapeHtml(sub.title)}
+                        </h3>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-xs theme-accent-text font-medium hidden sm:inline">વાંચો</span>
+                        <i data-lucide="book-open-check" class="w-4 h-4 theme-accent-text"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderReaderView() {
+            const book = booksLibrary[appState.selectedBookIndex];
+            const chapter = book?.chapters[appState.selectedChapterIndex];
+            if (!chapter) return navigateToHome();
+
+            let title = "";
+            let rawContent = "";
+            let metaPath = "";
+            let prevTitle = null;
+            let nextTitle = null;
+
+            if (chapter.hasSubChapters && appState.selectedSubChapterIndex !== null) {
+                const sub = chapter.subChapters[appState.selectedSubChapterIndex];
+                title = sub.title;
+                rawContent = sub.content;
+                metaPath = `${book.title} • ${chapter.title}`;
+                document.getElementById('reader-back-text').textContent = 'પેટા-પ્રકરણ યાદી';
+
+                if (appState.selectedSubChapterIndex > 0) {
+                    prevTitle = chapter.subChapters[appState.selectedSubChapterIndex - 1].title;
+                }
+                if (appState.selectedSubChapterIndex < chapter.subChapters.length - 1) {
+                    nextTitle = chapter.subChapters[appState.selectedSubChapterIndex + 1].title;
+                }
+            } else {
+                title = chapter.title;
+                rawContent = chapter.content;
+                metaPath = book.title;
+                document.getElementById('reader-back-text').textContent = 'પ્રકરણ યાદી';
+
+                if (appState.selectedChapterIndex > 0) {
+                    prevTitle = book.chapters[appState.selectedChapterIndex - 1].title;
+                }
+                if (appState.selectedChapterIndex < book.chapters.length - 1) {
+                    nextTitle = book.chapters[appState.selectedChapterIndex + 1].title;
+                }
+            }
+
+            document.getElementById('reader-meta-path').textContent = metaPath;
+            document.getElementById('reader-title').textContent = title;
+            document.getElementById('reader-body').innerHTML = formatSpiritualContent(rawContent, title);
+
+            // Configure Prev / Next Buttons
+            const prevBtn = document.getElementById('btn-prev-item');
+            const nextBtn = document.getElementById('btn-next-item');
+            prevBtn.disabled = !prevTitle;
+            nextBtn.disabled = !nextTitle;
+            document.getElementById('prev-item-title').textContent = prevTitle || 'આ પ્રથમ છે';
+            document.getElementById('next-item-title').textContent = nextTitle || 'આ છેલ્લું છે';
+        }
+
+        // Format CDATA text into clean paragraphs and highlight Sanskrit shlokas or questions
+        function formatSpiritualContent(rawText, currentTitle) {
+            if (!rawText) return `<p class="theme-text-secondary italic text-center">આ પ્રકરણમાં કોઈ લખાણ ઉપલબ્ધ નથી.</p>`;
+
+            const lines = rawText.split(/\r?\n/).map(l => l.trim());
+            const paragraphs = [];
+
+            lines.forEach((line, index) => {
+                if (!line) return;
+
+                // Skip duplicate first line if it repeats the exact title
+                const cleanLine = line.replace(/[“”"']/g, '').trim();
+                const cleanTitle = currentTitle.replace(/[“”"']/g, '').trim();
+                if (index === 0 && cleanLine === cleanTitle) return;
+
+                // Highlight Question headers or Sanskrit Shlokas (containing ।।)
+                if (line.includes('।।') || line === '“ પ્રશ્ન ”' || line === '" પ્રશ્ન "' || line === 'પ્રશ્ન') {
+                    paragraphs.push(`<div class="shloka-highlight text-center">${escapeHtml(line)}</div>`);
+                } else {
+                    paragraphs.push(`<p>${escapeHtml(line)}</p>`);
+                }
+            });
+
+            return paragraphs.join('');
+        }
+
+        /***********************************************************************
+         * 7. READER CONTROLS, SEARCH & THEME UTILITIES
+         ***********************************************************************/
+        function handleSearch(value) {
+            appState.searchQuery = value.trim();
+            document.getElementById('clear-search-btn').classList.toggle('hidden', !appState.searchQuery);
+            renderApp();
+        }
+
+        function clearSearch(shouldRender = true) {
+            appState.searchQuery = '';
+            const input = document.getElementById('search-input');
+            if (input) input.value = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            if (shouldRender) renderApp();
+        }
+
+        function changeFontSize(delta) {
+            appState.fontSize = Math.min(32, Math.max(14, appState.fontSize + delta));
+            const readerBody = document.getElementById('reader-body');
+            readerBody.style.fontSize = appState.fontSize + 'px';
+            document.getElementById('font-size-label').textContent = appState.fontSize + 'px';
+        }
+
+        function toggleReaderFontFamily() {
+            appState.isSerifFont = !appState.isSerifFont;
+            const readerBody = document.getElementById('reader-body');
+            const btn = document.getElementById('font-family-btn');
+            if (appState.isSerifFont) {
+                readerBody.classList.remove('font-sans-gu');
+                readerBody.classList.add('font-serif-gu');
+                btn.textContent = 'સેરિફ ફોન્ટ';
+            } else {
+                readerBody.classList.remove('font-serif-gu');
+                readerBody.classList.add('font-sans-gu');
+                btn.textContent = 'સાદા ફોન્ટ';
+            }
+        }
+
+        function setTheme(themeName) {
+            const htmlEl = document.documentElement;
+            htmlEl.classList.remove('theme-light', 'theme-sepia', 'theme-dark');
+            htmlEl.classList.add(`theme-${themeName}`);
+
+            ['light', 'sepia', 'dark'].forEach(t => {
+                const btn = document.getElementById(`btn-theme-${t}`);
+                if (t === themeName) {
+                    btn.className = "p-1.5 rounded-lg text-xs font-medium theme-accent-bg text-white shadow-sm transition";
+                } else {
+                    btn.className = "p-1.5 rounded-lg text-xs font-medium theme-text-secondary hover:theme-text-primary transition";
+                }
+            });
+        }
+
+        function copyReaderContent() {
+            const title = document.getElementById('reader-title').textContent;
+            const body = document.getElementById('reader-body').innerText;
+            const fullText = `${title}\n\n${body}`;
+
+            const tempArea = document.createElement('textarea');
+            tempArea.value = fullText;
+            document.body.appendChild(tempArea);
+            tempArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempArea);
+
+            showToast('આ પ્રકરણનું લખાણ કોપી થઈ ગયું છે!');
+        }
+
+        function toggleGitHubModal(show) {
+            document.getElementById('github-modal').classList.toggle('hidden', !show);
+        }
+
+        function showToast(msg) {
+            const banner = document.getElementById('toast-banner');
+            document.getElementById('toast-message').textContent = msg;
+            banner.classList.remove('hidden');
+            setTimeout(hideToast, 5000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast-banner').classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
