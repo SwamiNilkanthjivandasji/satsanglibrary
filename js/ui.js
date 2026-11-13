@@ -16,6 +16,24 @@ const ERROR_TEXT = {
 };
 export const errorText = (code) => ERROR_TEXT[code] || ERROR_TEXT.network;
 
+// લખાણમાં શોધેલો શબ્દ <mark> થી બતાવો (પહેલાં escape, એટલે HTML સલામત)
+export function markHtml(text, term) {
+  if (!term) return esc(text);
+  const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'giu');
+  let out = '';
+  let last = 0;
+  let m;
+  while ((m = re.exec(text))) {
+    if (m[0].length === 0) {
+      re.lastIndex++;
+      continue;
+    }
+    out += `${esc(text.slice(last, m.index))}<mark>${esc(m[0])}</mark>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(text.slice(last));
+}
+
 /* ---------- બુક લાઇબ્રેરી ---------- */
 
 function statusChip(book) {
@@ -177,7 +195,7 @@ export function subChaptersView({ book, chapterIndex, query }) {
   const q = query.toLowerCase();
   const rows = chapter.subChapters
     .map((sub, idx) => ({ sub, idx }))
-    .filter(({ sub }) => !q || sub.title.toLowerCase().includes(q) || sub.content.toLowerCase().includes(q));
+    .filter(({ sub }) => !q || sub.title.toLowerCase().includes(q));
 
   const items = rows
     .map(
@@ -220,7 +238,7 @@ function sequenceOf(book) {
   return book._seq;
 }
 
-export function readerView({ book, chapterIndex, subIndex, prefs }) {
+export function readerView({ book, chapterIndex, subIndex, prefs, highlight }) {
   const chapter = book.chapters[chapterIndex];
   const hasSub = chapter.hasSubChapters && subIndex !== null && chapter.subChapters[subIndex];
 
@@ -259,19 +277,19 @@ export function readerView({ book, chapterIndex, subIndex, prefs }) {
         .map((b) => {
           const idAttr = b.id ? ` data-id="${esc(b.id)}"` : '';
           return b.kind === 'highlight'
-            ? `<div class="shloka"${idAttr}>${esc(b.text)}</div>`
-            : `<p${idAttr}>${esc(b.text)}</p>`;
+            ? `<div class="shloka"${idAttr}>${markHtml(b.text, highlight)}</div>`
+            : `<p${idAttr}>${markHtml(b.text, highlight)}</p>`;
         })
         .join('')
     : `<p class="muted center">આ પ્રકરણમાં કોઈ લખાણ ઉપલબ્ધ નથી.</p>`;
 
-  const controls = (mobile) => `
+  const controls = () => `
     <button class="btn btn--sm" type="button" data-action="toggle-font-family" aria-pressed="${prefs.serif}">
-      ${prefs.serif ? (mobile ? 'સેરિફ' : 'સેરિફ ફોન્ટ') : mobile ? 'સાદા' : 'સાદા ફોન્ટ'}
+      ${prefs.serif ? 'સેરિફ ફોન્ટ' : 'સાદા ફોન્ટ'}
     </button>
     <div class="stepper" role="group" aria-label="અક્ષરનું કદ">
       <button type="button" data-action="font-smaller" aria-label="અક્ષર નાના કરો">A−</button>
-      <span class="stepper__value" data-role="font-size">${prefs.fontSize}${mobile ? '' : 'px'}</span>
+      <span class="stepper__value" data-role="font-size">${prefs.fontSize}px</span>
       <button type="button" data-action="font-bigger" aria-label="અક્ષર મોટા કરો">A+</button>
     </div>
     <button class="icon-btn icon-btn--sm" type="button" data-action="copy" aria-label="લખાણ કોપી કરો">${icon('copy')}</button>`;
@@ -295,7 +313,7 @@ export function readerView({ book, chapterIndex, subIndex, prefs }) {
       <div class="reader">
         <div class="reader__toolbar">
           <a class="btn" href="${backHref}">${icon('arrow-left')}<span>${backText}</span></a>
-          <div class="reader__controls">${controls(false)}</div>
+          <div class="reader__controls">${controls()}</div>
         </div>
         <article class="paper">
           <header class="paper__head">
@@ -305,21 +323,18 @@ export function readerView({ book, chapterIndex, subIndex, prefs }) {
           <div id="reader-body" class="reader-body ${prefs.serif ? 'is-serif' : 'is-sans'}" style="font-size:${prefs.fontSize}px">${body}</div>
         </article>
         <nav class="pager" aria-label="અગાઉનું / આગળનું">${pager(prev, 'prev')}${pager(next, 'next')}</nav>
-        <div class="reader-bar" role="toolbar" aria-label="વાંચન સેટિંગ્સ">
-          <a class="btn btn--sm" href="${backHref}">${icon('arrow-left')}<span>પાછા</span></a>
-          <div class="reader__controls">${controls(true)}</div>
-        </div>
       </div>`,
   };
 }
 
 /* ---------- breadcrumbs ---------- */
 
-export function breadcrumbs({ book, chapterIndex, subIndex, onHome }) {
+export function breadcrumbs({ book, chapterIndex, subIndex, onHome, searching }) {
   const sep = icon('chevron-right', 'crumb__sep');
   const parts = [
     `<a class="crumb ${onHome ? 'is-current' : ''}" href="#/">${icon('library')}<span>પુસ્તકાલય</span></a>`,
   ];
+  if (searching) parts.push(sep, `<span class="crumb is-current">${icon('search')}<span>શોધ</span></span>`);
   if (book) {
     const chapter = chapterIndex !== null ? book.chapters[chapterIndex] : null;
     const bookIsLast = chapterIndex === null;
@@ -333,4 +348,79 @@ export function breadcrumbs({ book, chapterIndex, subIndex, onHome }) {
     }
   }
   return parts.join('');
+}
+
+/* ---------- લખાણ શોધ પરિણામ ---------- */
+
+export function searchView({ search, query }) {
+  const head = `
+    <div class="page-head page-head--card">
+      <a class="icon-btn" href="#/" aria-label="પુસ્તકાલય પર પાછા જાઓ">${icon('arrow-left')}</a>
+      <div class="page-head__grow">
+        <span class="chip chip--accent">${icon('search')}લખાણ શોધ</span>
+        <h2 class="page-head__title">“${esc(query)}”</h2>
+      </div>
+    </div>`;
+
+  if (!search || search.status === 'short') {
+    return `${head}<div class="panel panel--center"><p class="panel__title">ઓછામાં ઓછા 2 અક્ષર લખો</p><p class="panel__text">શોધ માટે શબ્દ લખીને Enter દબાવો.</p></div>`;
+  }
+
+  if (search.status === 'running') {
+    return `${head}
+      <div class="panel panel--center" aria-busy="true">
+        <span class="spinner spinner--lg" aria-hidden="true"></span>
+        <p class="panel__title">શોધી રહ્યા છીએ…</p>
+        <p class="panel__text" id="search-progress" role="status"></p>
+      </div>`;
+  }
+
+  const r = search.result;
+  const note = r.notLoaded.length
+    ? `<div class="notice">
+         ${icon('alert')}
+         <p>${r.notLoaded.length} બુક હજી લોડ થઈ નથી, તેમાં શોધાયું નથી: ${r.notLoaded.map(esc).join(', ')}.</p>
+         <button class="link-btn" type="button" data-action="search-again">${icon('refresh')}ફરી શોધો</button>
+       </div>`
+    : '';
+
+  if (r.groups.length === 0) {
+    return `${head}${note}
+      <div class="panel panel--center">
+        ${icon('search', 'panel__icon')}
+        <p class="panel__title">કોઈ પરિણામ મળ્યું નથી</p>
+        <p class="panel__text">${r.searchedBooks} બુકમાં શોધ્યું. જોડણી બદલીને અથવા ટૂંકો શબ્દ લખીને ફરી પ્રયત્ન કરો.</p>
+      </div>`;
+  }
+
+  const summary = `<p class="search-summary">${r.matchedItems} સ્થળે, કુલ ${r.totalMatches} વાર મળ્યું${
+    r.truncated ? ` • પહેલા ${r.listedItems} બતાવ્યા, વધુ ચોક્કસ શબ્દ લખો` : ''
+  }</p>`;
+
+  const groups = r.groups
+    .map(({ book, hits }) => {
+      const items = hits
+        .map((h) => {
+          const to = `${href(book.key, h.ci, h.si)}?h=${encodeURIComponent(r.query)}`;
+          const context = h.si !== null ? `<span class="result__context">${esc(h.chapterTitle)}</span>` : '';
+          return `
+            <a class="result" href="${to}">
+              <span class="result__top">
+                <span class="result__title">${esc(h.title)}</span>
+                <span class="chip chip--accent">${h.count} વાર</span>
+              </span>
+              ${context}
+              <span class="result__snippet">${esc(h.snippet.before)}<mark>${esc(h.snippet.match)}</mark>${esc(h.snippet.after)}</span>
+            </a>`;
+        })
+        .join('');
+      return `
+        <section class="result-group">
+          <h3 class="result-group__title">${icon('book')}${esc(book.title)}<span class="pill">${hits.length}</span></h3>
+          <div class="list">${items}</div>
+        </section>`;
+    })
+    .join('');
+
+  return `${head}${note}${summary}${groups}`;
 }

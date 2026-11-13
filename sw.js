@@ -6,7 +6,7 @@
  *    fonts/ ફાઇલ PRECACHE માં નથી મૂકી: ફાઇલ ન હોય તો આખું install નિષ્ફળ ન જાય તે માટે.
  * CACHE_VERSION બદલવાથી જૂની cache સાફ થાય. ફાઇલ યાદી બદલાય તો PRECACHE પણ સુધારવી.
  */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const SHELL_CACHE = `satsang-shell-${CACHE_VERSION}`;
 const FONT_CACHE = `satsang-fonts-${CACHE_VERSION}`;
 const NETWORK_TIMEOUT_MS = 4000;
@@ -22,6 +22,7 @@ const PRECACHE = [
   'js/store.js',
   'js/parser.js',
   'js/loader.js',
+  'js/search.js',
   'js/ui.js',
   'js/pwa.js',
   'icons/icon.svg',

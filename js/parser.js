@@ -90,6 +90,9 @@ export function summarize(chapters) {
   return { chapterCount: chapters.length, subChapterCount: subTotal, nested: subTotal > 0 };
 }
 
+// લખાણમાંથી [id = ...] માર્કર કાઢો (શોધમાં માર્કરનું લખાણ ખોટું પરિણામ ન આપે તે માટે)
+export const stripMarkers = (text) => String(text || '').replace(ID_MARKER, '');
+
 const QUESTION_HEADER = /^[“”"'‘’]?\s*પ્રશ્ન\s*[“”"'‘’]?$/;
 const normalizeForCompare = (s) => collapse(s.replace(/[“”"'‘’]/g, ''));
 

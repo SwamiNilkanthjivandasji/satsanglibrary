@@ -4,6 +4,7 @@ import * as store from './store.js';
 import { BookLoader } from './loader.js';
 import * as ui from './ui.js';
 import { initPwa } from './pwa.js';
+import { runSearch, MIN_LENGTH } from './search.js';
 
 const $ = (sel) => document.querySelector(sel);
 const viewEl = $('#view');
@@ -23,7 +24,7 @@ const scrollRatio = () => {
   return max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
 };
 function saveScroll() {
-  if (!document.body.classList.contains('has-reader-bar')) return;
+  if (!document.body.classList.contains('reader-open')) return;
   const rec = readLast();
   if (!rec) return;
   rec.r = scrollRatio();
@@ -41,6 +42,8 @@ const state = {
   listState: 'loading', // loading | ready | error
   loader: null,
   query: '',
+  search: null, // { q, status: 'running' | 'done' | 'short', progress, result }
+  searchToken: null,
   prefs: {
     theme: storage.get('sp.theme', 'sepia'),
     fontSize: Number(storage.get('sp.fs', window.innerWidth < 640 ? CONFIG.font.mobileDefault : CONFIG.font.desktopDefault)),
@@ -79,9 +82,12 @@ function parseRoute() {
     seg = [];
   }
   const int = (v) => (v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
+  if (seg[0] === 'search') {
+    return { name: 'search', q: (new URLSearchParams(qs || '').get('q') || '').trim() };
+  }
   if (seg[0] === 'b' && seg[1]) {
     const q = new URLSearchParams(qs || '');
-    return { name: 'book', key: seg[1], c: int(seg[2]), s: int(seg[3]), p: q.get('p'), resume: q.get('resume') === '1' };
+    return { name: 'book', key: seg[1], c: int(seg[2]), s: int(seg[3]), p: q.get('p'), h: q.get('h') || '', resume: q.get('resume') === '1' };
   }
   return { name: 'home' };
 }
@@ -104,8 +110,12 @@ function render({ scroll = true } = {}) {
   if (route.name === 'home') {
     html = ui.booksView({ books: state.books, listState: state.listState, query: state.query, last: readLast() });
   } else if (state.listState === 'loading') {
-    html = ui.bookPendingView({ title: 'પુસ્તકાલય', status: 'loading', file: '' });
+    html = ui.bookPendingView({ title: route.name === 'search' ? 'શોધ' : 'પુસ્તકાલય', status: 'loading', file: '' });
     pending = true;
+  } else if (route.name === 'search') {
+    title = `“${route.q}” • શોધ • ${CONFIG.appName}`;
+    ensureSearch(route.q);
+    html = ui.searchView({ search: state.search, query: route.q });
   } else if (!book) {
     html = ui.notFoundView();
   } else {
@@ -128,7 +138,7 @@ function render({ scroll = true } = {}) {
           title = `${chap.title} • ${book.title}`;
         } else {
           subIndex = sub ? route.s : null;
-          const reader = ui.readerView({ book, chapterIndex, subIndex, prefs: state.prefs });
+          const reader = ui.readerView({ book, chapterIndex, subIndex, prefs: state.prefs, highlight: route.h });
           html = reader.html;
           title = `${reader.title} • ${book.title}`;
           readerTitle = reader.title;
@@ -142,13 +152,14 @@ function render({ scroll = true } = {}) {
   viewEl.innerHTML = html;
   viewEl.dataset.pending = pending ? '1' : '';
   document.title = title;
-  document.body.classList.toggle('has-reader-bar', readerOpen);
+  document.body.classList.toggle('reader-open', readerOpen);
   $('#search-container').hidden = !searchVisible;
   $('#breadcrumbs').innerHTML = ui.breadcrumbs({
     book: book && book.loaded ? book : null,
     chapterIndex,
     subIndex,
     onHome: route.name === 'home',
+    searching: route.name === 'search',
   });
   const crumbs = $('#breadcrumbs');
   crumbs.scrollLeft = crumbs.scrollWidth;
@@ -172,6 +183,12 @@ function render({ scroll = true } = {}) {
     }
   }
   lastReaderKey = readerKey;
+
+  // શોધમાંથી આવ્યા હોઈએ તો પહેલા મળેલા શબ્દ પર લઈ જાઓ
+  if (readerOpen && route.h && !route.p && !route.resume) {
+    const first = viewEl.querySelector('#reader-body mark');
+    if (first) first.scrollIntoView({ block: 'center' });
+  }
 
   // ફકરાની id પર સીધી લિંક: #/b/…/c/s?p=<id>
   if (readerOpen && route.p) {
@@ -222,8 +239,8 @@ async function loadLibrary() {
     state.books = list.map((b) => ({ ...b }));
     state.loader = new BookLoader(state.books, onBookChange);
     state.listState = 'ready';
+    state.loader.start(); // સેવ કરેલી બુક તરત તૈયાર, પછી બાકીની બેકગ્રાઉન્ડમાં
     render({ scroll: false }); // બુકના નામ તરત દેખાય
-    state.loader.start(); // પછી બેકગ્રાઉન્ડમાં બુક
   } catch (_) {
     state.listState = 'error';
     render({ scroll: false });
@@ -254,6 +271,59 @@ function onBookChange(book, type) {
   }
 }
 
+/* ---------- લખાણ શોધ (Enter દબાવે ત્યારે જ) ---------- */
+function ensureSearch(q) {
+  if (state.search && state.search.q === q) return;
+  if (state.searchToken) state.searchToken.cancelled = true;
+  if (q.length < MIN_LENGTH) {
+    state.search = { q, status: 'short' };
+    return;
+  }
+  const token = { cancelled: false };
+  state.searchToken = token;
+  state.search = { q, status: 'running' };
+
+  (async () => {
+    await (state.loader && state.loader.hydrated ? state.loader.hydrated : Promise.resolve());
+    const result = await runSearch(state.books, q, token, (done, total, bookTitle) => {
+      const el = document.getElementById('search-progress');
+      if (el && !token.cancelled) el.textContent = `${done + 1}/${total} • ${bookTitle}`;
+    });
+    if (!result || token.cancelled) return;
+    state.search = { q, status: 'done', result };
+    if (parseRoute().name === 'search') render({ scroll: false });
+  })();
+}
+
+function submitSearch() {
+  const q = searchInput.value.trim().replace(/\s+/g, ' ');
+  if (q.length < MIN_LENGTH) {
+    toast('શોધવા માટે ઓછામાં ઓછા 2 અક્ષર લખો.');
+    return;
+  }
+  const route = parseRoute();
+  if (route.name === 'search' && route.q === q) {
+    state.search = null; // એ જ શબ્દ ફરી: નવેસરથી શોધો
+    render({ scroll: false });
+  } else {
+    location.hash = `#/search?q=${encodeURIComponent(q)}`;
+  }
+  searchInput.blur();
+}
+
+function syncSearchInput() {
+  const route = parseRoute();
+  if (route.name === 'search') {
+    searchInput.value = route.q;
+    state.query = '';
+    $('#clear-search').hidden = !route.q;
+  } else if (state.query) {
+    state.query = '';
+    searchInput.value = '';
+    $('#clear-search').hidden = true;
+  }
+}
+
 /* ---------- ક્લિક / ઇનપુટ ---------- */
 function setFontSize(next) {
   const { min, max } = CONFIG.font;
@@ -261,8 +331,8 @@ function setFontSize(next) {
   storage.set('sp.fs', state.prefs.fontSize);
   const body = $('#reader-body');
   if (body) body.style.fontSize = `${state.prefs.fontSize}px`;
-  document.querySelectorAll('[data-role="font-size"]').forEach((el, i) => {
-    el.textContent = el.closest('.reader-bar') ? state.prefs.fontSize : `${state.prefs.fontSize}px`;
+  document.querySelectorAll('[data-role="font-size"]').forEach((el) => {
+    el.textContent = `${state.prefs.fontSize}px`;
   });
 }
 
@@ -301,6 +371,10 @@ const actions = {
   copy: copyReader,
   retry: (el) => state.loader && state.loader.retry(el.dataset.file),
   'reload-list': () => loadLibrary(),
+  'search-again': () => {
+    state.search = null;
+    render({ scroll: false });
+  },
   'hide-toast': () => ($('#toast').hidden = true),
 };
 
@@ -325,25 +399,29 @@ document.addEventListener('click', (e) => {
 });
 
 const searchInput = $('#search-input');
+// ટાઇપ કરતી વખતે ફક્ત પુસ્તક/પ્રકરણના નામ ગાળે છે (હલકું). લખાણમાં શોધ Enter દબાવ્યા પછી.
 searchInput.addEventListener('input', () => {
+  $('#clear-search').hidden = !searchInput.value.trim();
+  if (parseRoute().name === 'search') return;
   state.query = searchInput.value.trim();
-  $('#clear-search').hidden = !state.query;
   render({ scroll: false });
+});
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.isComposing) {
+    e.preventDefault();
+    submitSearch();
+  }
 });
 $('#clear-search').addEventListener('click', () => {
   searchInput.value = '';
   state.query = '';
   $('#clear-search').hidden = true;
-  render({ scroll: false });
+  if (parseRoute().name !== 'search') render({ scroll: false });
   searchInput.focus();
 });
 
 window.addEventListener('hashchange', () => {
-  if (state.query) {
-    state.query = '';
-    searchInput.value = '';
-    $('#clear-search').hidden = true;
-  }
+  syncSearchInput();
   render();
 });
 
@@ -360,6 +438,7 @@ window.addEventListener('online', () => {
 
 /* ---------- શરૂઆત ---------- */
 applyTheme(state.prefs.theme);
+syncSearchInput();
 syncOnlineBadge();
 initPwa({ toast });
 loadLibrary();
