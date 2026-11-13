@@ -352,13 +352,19 @@ export function breadcrumbs({ book, chapterIndex, subIndex, onHome, searching })
 
 /* ---------- લખાણ શોધ પરિણામ ---------- */
 
-export function searchView({ search, query }) {
+export function searchView({ search, query, scopeBook }) {
+  const backTo = scopeBook ? href(scopeBook.key) : '#/';
+  const scopeLine = scopeBook
+    ? `<p class="page-head__sub">ફક્ત “${esc(scopeBook.title)}” માં •
+         <a class="inline-link" href="#/search?q=${encodeURIComponent(query)}">બધી બુકમાં શોધો</a></p>`
+    : `<p class="page-head__sub">બધી બુકમાં</p>`;
   const head = `
     <div class="page-head page-head--card">
-      <a class="icon-btn" href="#/" aria-label="પુસ્તકાલય પર પાછા જાઓ">${icon('arrow-left')}</a>
+      <a class="icon-btn" href="${backTo}" aria-label="પાછા જાઓ">${icon('arrow-left')}</a>
       <div class="page-head__grow">
         <span class="chip chip--accent">${icon('search')}લખાણ શોધ</span>
         <h2 class="page-head__title">“${esc(query)}”</h2>
+        ${scopeLine}
       </div>
     </div>`;
 
@@ -389,7 +395,7 @@ export function searchView({ search, query }) {
       <div class="panel panel--center">
         ${icon('search', 'panel__icon')}
         <p class="panel__title">કોઈ પરિણામ મળ્યું નથી</p>
-        <p class="panel__text">${r.searchedBooks} બુકમાં શોધ્યું. જોડણી બદલીને અથવા ટૂંકો શબ્દ લખીને ફરી પ્રયત્ન કરો.</p>
+        <p class="panel__text">${scopeBook ? `“${esc(scopeBook.title)}” માં` : `${r.searchedBooks} બુકમાં`} શોધ્યું. જોડણી બદલીને અથવા ટૂંકો શબ્દ લખીને ફરી પ્રયત્ન કરો.</p>
       </div>`;
   }
 

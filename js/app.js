@@ -83,7 +83,8 @@ function parseRoute() {
   }
   const int = (v) => (v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
   if (seg[0] === 'search') {
-    return { name: 'search', q: (new URLSearchParams(qs || '').get('q') || '').trim() };
+    const sq = new URLSearchParams(qs || '');
+    return { name: 'search', q: (sq.get('q') || '').trim(), scope: sq.get('b') || '' };
   }
   if (seg[0] === 'b' && seg[1]) {
     const q = new URLSearchParams(qs || '');
@@ -106,6 +107,7 @@ function render({ scroll = true } = {}) {
   let searchVisible = true;
   let pending = false;
   let readerTitle = '';
+  let scopeBook = null;
 
   if (route.name === 'home') {
     html = ui.booksView({ books: state.books, listState: state.listState, query: state.query, last: readLast() });
@@ -114,8 +116,13 @@ function render({ scroll = true } = {}) {
     pending = true;
   } else if (route.name === 'search') {
     title = `“${route.q}” • શોધ • ${CONFIG.appName}`;
-    ensureSearch(route.q);
-    html = ui.searchView({ search: state.search, query: route.q });
+    scopeBook = route.scope ? state.books.find((b) => b.key === route.scope) || null : null;
+    if (route.scope && !scopeBook) {
+      html = ui.notFoundView();
+    } else {
+      ensureSearch(route.q, scopeBook);
+      html = ui.searchView({ search: state.search, query: route.q, scopeBook });
+    }
   } else if (!book) {
     html = ui.notFoundView();
   } else {
@@ -154,8 +161,11 @@ function render({ scroll = true } = {}) {
   document.title = title;
   document.body.classList.toggle('reader-open', readerOpen);
   $('#search-container').hidden = !searchVisible;
+  // બુકની અંદર હો ત્યારે શોધ ફક્ત તે બુકમાં
+  const scoped = scopeBook || (route.name === 'book' && book && book.loaded ? book : null);
+  searchInput.placeholder = scoped ? 'આ બુકમાં શોધો • લખાણ માટે Enter દબાવો' : 'નામ શોધો • લખાણ શોધવા Enter દબાવો';
   $('#breadcrumbs').innerHTML = ui.breadcrumbs({
-    book: book && book.loaded ? book : null,
+    book: scopeBook || (book && book.loaded ? book : null),
     chapterIndex,
     subIndex,
     onHome: route.name === 'home',
@@ -272,25 +282,26 @@ function onBookChange(book, type) {
 }
 
 /* ---------- લખાણ શોધ (Enter દબાવે ત્યારે જ) ---------- */
-function ensureSearch(q) {
-  if (state.search && state.search.q === q) return;
+function ensureSearch(q, scopeBook) {
+  const scopeKey = scopeBook ? scopeBook.key : '';
+  if (state.search && state.search.q === q && state.search.scope === scopeKey) return;
   if (state.searchToken) state.searchToken.cancelled = true;
   if (q.length < MIN_LENGTH) {
-    state.search = { q, status: 'short' };
+    state.search = { q, scope: scopeKey, status: 'short' };
     return;
   }
   const token = { cancelled: false };
   state.searchToken = token;
-  state.search = { q, status: 'running' };
+  state.search = { q, scope: scopeKey, status: 'running' };
 
   (async () => {
     await (state.loader && state.loader.hydrated ? state.loader.hydrated : Promise.resolve());
-    const result = await runSearch(state.books, q, token, (done, total, bookTitle) => {
+    const result = await runSearch(scopeBook ? [scopeBook] : state.books, q, token, (done, total, bookTitle) => {
       const el = document.getElementById('search-progress');
       if (el && !token.cancelled) el.textContent = `${done + 1}/${total} • ${bookTitle}`;
     });
     if (!result || token.cancelled) return;
-    state.search = { q, status: 'done', result };
+    state.search = { q, scope: scopeKey, status: 'done', result };
     if (parseRoute().name === 'search') render({ scroll: false });
   })();
 }
@@ -302,11 +313,14 @@ function submitSearch() {
     return;
   }
   const route = parseRoute();
-  if (route.name === 'search' && route.q === q) {
+  // બુકની અંદરથી (પ્રકરણ/પેટા-પ્રકરણ યાદી કે શોધ પરિણામ) શોધો તો ફક્ત તે બુકમાં; હોમ પરથી તો બધી બુકમાં
+  const scope = route.name === 'book' ? route.key : route.name === 'search' ? route.scope : '';
+  const target = `#/search?q=${encodeURIComponent(q)}${scope ? `&b=${encodeURIComponent(scope)}` : ''}`;
+  if (route.name === 'search' && route.q === q && route.scope === scope) {
     state.search = null; // એ જ શબ્દ ફરી: નવેસરથી શોધો
     render({ scroll: false });
   } else {
-    location.hash = `#/search?q=${encodeURIComponent(q)}`;
+    location.hash = target;
   }
   searchInput.blur();
 }
