@@ -1,0 +1,19 @@
+{
+  "name": "સત્સંગ પુસ્તકાલય",
+  "short_name": "સત્સંગ પુસ્તક",
+  "description": "ડિજિટલ આધ્યાત્મિક ગ્રંથો અને વાંચન",
+  "lang": "gu",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fdf8f2",
+  "theme_color": "#c85a17",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
