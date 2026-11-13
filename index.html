@@ -160,6 +160,10 @@
                 <div class="truncate">
                     <h1 class="text-base sm:text-xl font-bold tracking-tight theme-text-primary truncate">
                         સત્સંગ પુસ્તકાલય
+                    </h1>
+                </div>
+            </div>
+
             <!-- Theme & Install Controls (Touch Friendly) -->
             <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <!-- App Install Button (PWA) -->
@@ -609,6 +613,12 @@
 
         function closeInstallModal() {
             document.getElementById('install-guide-modal').classList.add('hidden');
+        }
+
+        function getBookNameFromFilename(filePath) {
+            if (!filePath) return "પુસ્તક";
+            const fileName = decodeURIComponent(filePath).split('/').pop().split('\\').pop();
+            return fileName.replace(/\.xml$/i, '').trim();
         }
 
         function extractSmartSummary(chapters) {
