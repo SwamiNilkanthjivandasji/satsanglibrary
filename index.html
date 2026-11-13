@@ -111,61 +111,77 @@
         .reader-content p {
             margin-bottom: 1.25em;
             text-align: justify;
+            word-break: break-word;
         }
         .reader-content .shloka-highlight {
             background-color: var(--accent-light);
             border-left: 4px solid var(--accent-primary);
-            padding: 1rem 1.25rem;
-            border-radius: 0.5rem;
+            padding: 0.875rem 1rem;
+            border-radius: 0.75rem;
             font-weight: 600;
-            margin: 1.5rem 0;
+            margin: 1.25rem 0;
+        }
+        @media (min-width: 640px) {
+            .reader-content .shloka-highlight {
+                padding: 1rem 1.25rem;
+                margin: 1.5rem 0;
+            }
+        }
+
+        /* Hide scrollbar on horizontal breadcrumb scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-white">
+<body class="min-h-screen flex flex-col overflow-x-hidden selection:bg-amber-500 selection:text-white pb-16 sm:pb-0">
 
     <!-- Top Spiritual Accent Bar -->
     <div class="h-1.5 w-full spiritual-header-gradient"></div>
 
-    <!-- Sticky Navigation Header -->
+    <!-- Sticky Navigation Header (Mobile Optimized) -->
     <header class="sticky top-0 z-30 theme-bg-card border-b theme-border shadow-sm transition-colors duration-300">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
             
             <!-- Brand / Home Logo -->
-            <div onclick="navigateToHome()" class="flex items-center gap-3 cursor-pointer group">
-                <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-                    <i data-lucide="book-open" class="w-5 h-5"></i>
+            <div onclick="navigateToHome()" class="flex items-center gap-2.5 cursor-pointer group min-w-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl theme-accent-bg flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform shrink-0">
+                    <i data-lucide="book-open" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                 </div>
-                <div>
-                    <h1 class="text-lg sm:text-xl font-bold tracking-tight theme-text-primary flex items-center gap-2">
+                <div class="truncate">
+                    <h1 class="text-base sm:text-xl font-bold tracking-tight theme-text-primary truncate">
                         સત્સંગ પુસ્તકાલય
                     </h1>
-                    <p class="text-xs theme-text-secondary">ડિજિટલ આધ્યાત્મિક ગ્રંથો અને વાંચન</p>
+                    <p class="text-[11px] sm:text-xs theme-text-secondary truncate hidden xs:block">ડિજિટલ આધ્યાત્મિક ગ્રંથો અને વાંચન</p>
                 </div>
             </div>
 
-            <!-- Theme Controls (Clean End-User Header) -->
-            <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Theme Controls (Touch Friendly) -->
+            <div class="flex items-center gap-1.5 shrink-0">
                 <div class="flex items-center rounded-xl p-1 theme-bg-secondary border theme-border">
-                    <button onclick="setTheme('light')" id="btn-theme-light" class="p-1.5 rounded-lg text-xs font-medium transition" title="લાઇટ મોડ (Light)">
+                    <button onclick="setTheme('light')" id="btn-theme-light" class="p-2 sm:p-1.5 rounded-lg text-xs font-medium transition touch-manipulation" title="લાઇટ મોડ (Light)">
                         <i data-lucide="sun" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="setTheme('sepia')" id="btn-theme-sepia" class="p-1.5 rounded-lg text-xs font-medium transition" title="સેપિયા મોડ (Warm Reading)">
+                    <button onclick="setTheme('sepia')" id="btn-theme-sepia" class="p-2 sm:p-1.5 rounded-lg text-xs font-medium transition touch-manipulation" title="સેપિયા મોડ (Warm Reading)">
                         <i data-lucide="coffee" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="setTheme('dark')" id="btn-theme-dark" class="p-1.5 rounded-lg text-xs font-medium transition" title="ડાર્ક મોડ (Night)">
+                    <button onclick="setTheme('dark')" id="btn-theme-dark" class="p-2 sm:p-1.5 rounded-lg text-xs font-medium transition touch-manipulation" title="ડાર્ક મોડ (Night)">
                         <i data-lucide="moon" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Secondary Bar: Breadcrumbs & Search -->
+        <!-- Secondary Bar: Scrollable Breadcrumbs & Search -->
         <div class="theme-bg-secondary border-t theme-border">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 
-                <!-- Dynamic Breadcrumb Navigation -->
-                <nav id="breadcrumb-nav" aria-label="Breadcrumb" class="flex items-center flex-wrap gap-1 text-xs sm:text-sm">
+                <!-- Horizontal Scrollable Breadcrumb Navigation on Mobile -->
+                <nav id="breadcrumb-nav" aria-label="Breadcrumb" class="flex items-center gap-1.5 text-xs sm:text-sm overflow-x-auto no-scrollbar whitespace-nowrap py-0.5">
                     <!-- Populated via JS -->
                 </nav>
 
@@ -177,10 +193,10 @@
                         id="search-input" 
                         oninput="handleSearch(this.value)"
                         placeholder="પુસ્તક અથવા પ્રકરણ શોધો..." 
-                        class="w-full pl-9 pr-8 py-1.5 rounded-xl text-xs sm:text-sm theme-bg-card theme-text-primary border theme-border focus:outline-none focus:ring-2 focus:ring-amber-500 transition"
+                        class="w-full pl-9 pr-9 py-2 sm:py-1.5 rounded-xl text-sm theme-bg-card theme-text-primary border theme-border focus:outline-none focus:ring-2 focus:ring-amber-500 transition"
                     >
-                    <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 theme-text-secondary hover:theme-text-primary">
-                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2 top-1/2 -translate-y-1/2 p-1.5 theme-text-secondary hover:theme-text-primary">
+                        <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
@@ -188,15 +204,15 @@
     </header>
 
     <!-- Main Dynamic Workspace -->
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <main class="flex-grow max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
         
         <!-- Notification Banner -->
-        <div id="toast-banner" class="hidden mb-6 p-4 rounded-2xl theme-accent-light border theme-border flex items-center justify-between gap-3 shadow-sm">
-            <div class="flex items-center gap-3">
+        <div id="toast-banner" class="hidden mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-2xl theme-accent-light border theme-border flex items-center justify-between gap-3 shadow-sm">
+            <div class="flex items-center gap-2.5">
                 <i data-lucide="check-circle-2" class="w-5 h-5 theme-accent-text shrink-0"></i>
-                <p id="toast-message" class="text-sm font-medium theme-text-primary"></p>
+                <p id="toast-message" class="text-xs sm:text-sm font-medium theme-text-primary"></p>
             </div>
-            <button onclick="hideToast()" class="theme-text-secondary hover:theme-text-primary">
+            <button onclick="hideToast()" class="p-1 theme-text-secondary hover:theme-text-primary">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
         </div>
@@ -211,136 +227,143 @@
         </div>
 
         <!-- VIEW 1: BOOKS LIBRARY GRID -->
-        <section id="view-books" class="space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b theme-border pb-4">
+        <section id="view-books" class="space-y-4 sm:space-y-6">
+            <div class="flex items-center justify-between gap-2 border-b theme-border pb-3 sm:pb-4">
                 <div>
-                    <h2 class="text-xl sm:text-2xl font-bold font-serif-gu theme-text-primary">ગ્રંથો અને પુસ્તકો</h2>
-                    <p class="text-sm theme-text-secondary mt-0.5">વાંચવા માટે નીચે આપેલા કોઈપણ પુસ્તક પર ક્લિક કરો</p>
+                    <h2 class="text-lg sm:text-2xl font-bold font-serif-gu theme-text-primary">ગ્રંથો અને પુસ્તકો</h2>
+                    <p class="text-xs sm:text-sm theme-text-secondary mt-0.5">વાંચવા માટે પુસ્તક પર ટચ કરો</p>
                 </div>
-                <div class="text-xs theme-text-secondary flex items-center gap-2">
+                <div class="text-xs theme-text-secondary shrink-0">
                     <span id="books-count-badge" class="px-2.5 py-1 rounded-full theme-bg-secondary border theme-border font-medium">કુલ 2 પુસ્તકો</span>
                 </div>
             </div>
 
             <!-- Books Grid Container -->
-            <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
                 <!-- Populated by JS -->
             </div>
         </section>
 
         <!-- VIEW 2: CHAPTERS LIST -->
-        <section id="view-chapters" class="hidden space-y-6">
+        <section id="view-chapters" class="hidden space-y-4 sm:space-y-6">
             <!-- Book Header Banner -->
-            <div class="p-5 sm:p-6 rounded-2xl theme-bg-card border theme-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div class="flex items-start gap-4">
-                    <button onclick="navigateToHome()" class="mt-1 p-2 rounded-xl theme-bg-secondary hover:opacity-80 transition border theme-border" title="પાછા જાઓ">
+            <div class="p-4 sm:p-6 rounded-2xl theme-bg-card border theme-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div class="flex items-start gap-3 sm:gap-4 w-full">
+                    <button onclick="navigateToHome()" class="mt-0.5 p-2.5 rounded-xl theme-bg-secondary active:scale-95 transition border theme-border shrink-0" title="પાછા જાઓ">
                         <i data-lucide="arrow-left" class="w-5 h-5"></i>
                     </button>
-                    <div>
-                        <span id="current-book-type-badge" class="text-xs px-2.5 py-0.5 rounded-full theme-accent-light theme-accent-text font-medium">અનુક્રમણિકા</span>
-                        <h2 id="current-book-title" class="text-xl sm:text-2xl font-bold font-serif-gu mt-1 theme-text-primary"></h2>
-                        <p id="current-book-subtitle" class="text-xs sm:text-sm theme-text-secondary mt-0.5"></p>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <span id="current-book-type-badge" class="text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full theme-accent-light theme-accent-text font-medium">અનુક્રમણિકા</span>
+                            <span class="text-xs font-medium px-2.5 py-0.5 rounded-lg theme-bg-secondary border theme-border sm:hidden">
+                                પ્રકરણો: <strong id="chapters-total-count-mobile" class="theme-accent-text">0</strong>
+                            </span>
+                        </div>
+                        <h2 id="current-book-title" class="text-lg sm:text-2xl font-bold font-serif-gu mt-1.5 theme-text-primary leading-snug"></h2>
+                        <p id="current-book-subtitle" class="text-xs sm:text-sm theme-text-secondary mt-0.5 line-clamp-2"></p>
                     </div>
                 </div>
-                <div class="text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl theme-bg-secondary border theme-border shrink-0">
+                <div class="hidden sm:block text-sm font-medium px-3.5 py-2 rounded-xl theme-bg-secondary border theme-border shrink-0">
                     કુલ પ્રકરણો: <span id="chapters-total-count" class="theme-accent-text font-bold">0</span>
                 </div>
             </div>
 
             <!-- Chapters List Container -->
-            <div id="chapters-list" class="grid grid-cols-1 gap-3">
+            <div id="chapters-list" class="grid grid-cols-1 gap-2.5 sm:gap-3">
                 <!-- Populated by JS -->
             </div>
         </section>
 
         <!-- VIEW 3: SUB-CHAPTERS LIST (Shown only if chapter has <sub_chapter> tags) -->
-        <section id="view-subchapters" class="hidden space-y-6">
-            <div class="p-5 sm:p-6 rounded-2xl theme-bg-card border theme-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div class="flex items-start gap-4">
-                    <button onclick="navigateBackToChapters()" class="mt-1 p-2 rounded-xl theme-bg-secondary hover:opacity-80 transition border theme-border" title="પ્રકરણ લિસ્ટ પર પાછા જાઓ">
+        <section id="view-subchapters" class="hidden space-y-4 sm:space-y-6">
+            <div class="p-4 sm:p-6 rounded-2xl theme-bg-card border theme-border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div class="flex items-start gap-3 sm:gap-4 w-full">
+                    <button onclick="navigateBackToChapters()" class="mt-0.5 p-2.5 rounded-xl theme-bg-secondary active:scale-95 transition border theme-border shrink-0" title="પ્રકરણ લિસ્ટ પર પાછા જાઓ">
                         <i data-lucide="arrow-left" class="w-5 h-5"></i>
                     </button>
-                    <div>
-                        <span id="subchapter-parent-book" class="text-xs font-medium theme-accent-text"></span>
-                        <h2 id="current-chapter-title" class="text-xl sm:text-2xl font-bold font-serif-gu mt-0.5 theme-text-primary"></h2>
-                        <p class="text-xs sm:text-sm theme-text-secondary mt-0.5">વાંચવા માટે નીચેનામાંથી પેટા-પ્રકરણ પસંદ કરો</p>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <span id="subchapter-parent-book" class="text-xs font-medium theme-accent-text truncate"></span>
+                            <span class="text-xs font-medium px-2.5 py-0.5 rounded-lg theme-bg-secondary border theme-border sm:hidden shrink-0">
+                                કુલ: <strong id="subchapters-total-count-mobile" class="theme-accent-text">0</strong>
+                            </span>
+                        </div>
+                        <h2 id="current-chapter-title" class="text-lg sm:text-2xl font-bold font-serif-gu mt-1 theme-text-primary leading-snug"></h2>
+                        <p class="text-xs sm:text-sm theme-text-secondary mt-0.5">વાંચવા માટે પેટા-પ્રકરણ પસંદ કરો</p>
                     </div>
                 </div>
-                <div class="text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl theme-bg-secondary border theme-border shrink-0">
+                <div class="hidden sm:block text-sm font-medium px-3.5 py-2 rounded-xl theme-bg-secondary border theme-border shrink-0">
                     કુલ પેટા-પ્રકરણ: <span id="subchapters-total-count" class="theme-accent-text font-bold">0</span>
                 </div>
             </div>
 
             <!-- Sub-chapters List Container -->
-            <div id="subchapters-list" class="grid grid-cols-1 gap-3">
+            <div id="subchapters-list" class="grid grid-cols-1 gap-2.5 sm:gap-3">
                 <!-- Populated by JS -->
             </div>
         </section>
 
         <!-- VIEW 4: CONTENT READER VIEW -->
-        <section id="view-reader" class="hidden max-w-4xl mx-auto space-y-6">
+        <section id="view-reader" class="hidden max-w-4xl mx-auto space-y-4 sm:space-y-6">
             
-            <!-- Reader Top Controls Toolbar -->
-            <div class="p-3 sm:p-4 rounded-2xl theme-bg-card border theme-border shadow-sm flex flex-wrap items-center justify-between gap-3">
-                <button id="reader-back-btn" onclick="handleReaderBack()" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium theme-bg-secondary hover:opacity-80 transition border theme-border">
+            <!-- Reader Top Controls Toolbar (Desktop & Tablet) -->
+            <div class="hidden sm:flex p-4 rounded-2xl theme-bg-card border theme-border shadow-sm flex-wrap items-center justify-between gap-3">
+                <button id="reader-back-btn" onclick="handleReaderBack()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium theme-bg-secondary hover:opacity-80 transition border theme-border">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     <span id="reader-back-text">યાદી પર પાછા જાઓ</span>
                 </button>
 
                 <!-- Typography Customization Controls -->
                 <div class="flex items-center flex-wrap gap-2">
-                    <!-- Font Family Toggle -->
-                    <button onclick="toggleReaderFontFamily()" id="font-family-btn" class="px-3 py-1.5 rounded-xl text-xs font-medium theme-bg-secondary border theme-border hover:opacity-80 transition" title="ફોન્ટ બદલો (Serif / Sans)">
+                    <button onclick="toggleReaderFontFamily()" id="font-family-btn" class="px-3 py-2 rounded-xl text-xs font-medium theme-bg-secondary border theme-border hover:opacity-80 transition">
                         સેરિફ ફોન્ટ
                     </button>
 
-                    <!-- Font Size Controls -->
                     <div class="flex items-center rounded-xl theme-bg-secondary border theme-border p-0.5">
-                        <button onclick="changeFontSize(-2)" class="px-2.5 py-1 rounded-lg text-xs font-bold hover:theme-bg-card transition" title="અક્ષર નાના કરો">A-</button>
-                        <span id="font-size-label" class="px-2 text-xs theme-text-secondary">20px</span>
-                        <button onclick="changeFontSize(2)" class="px-2.5 py-1 rounded-lg text-sm font-bold hover:theme-bg-card transition" title="અક્ષર મોટા કરો">A+</button>
+                        <button onclick="changeFontSize(-2)" class="px-3 py-1.5 rounded-lg text-xs font-bold hover:theme-bg-card transition">A-</button>
+                        <span id="font-size-label" class="px-2 text-xs theme-text-secondary">19px</span>
+                        <button onclick="changeFontSize(2)" class="px-3 py-1.5 rounded-lg text-sm font-bold hover:theme-bg-card transition">A+</button>
                     </div>
 
-                    <!-- Copy Content Button -->
-                    <button onclick="copyReaderContent()" class="p-2 rounded-xl theme-bg-secondary border theme-border hover:opacity-80 transition" title="લખાણ કોપી કરો">
+                    <button onclick="copyReaderContent()" class="p-2.5 rounded-xl theme-bg-secondary border theme-border hover:opacity-80 transition" title="લખાણ કોપી કરો">
                         <i data-lucide="copy" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Main Reading Canvas / Paper -->
-            <article class="theme-reader-bg rounded-3xl border theme-border shadow-md p-6 sm:p-10 md:p-12 transition-colors duration-300">
+            <article class="theme-reader-bg rounded-2xl sm:rounded-3xl border theme-border shadow-md p-4 sm:p-10 md:p-12 transition-colors duration-300">
                 <!-- Reader Header Metadata -->
-                <header class="border-b theme-border pb-6 mb-8 text-center">
-                    <div id="reader-meta-path" class="text-xs sm:text-sm font-medium theme-accent-text mb-2"></div>
-                    <h1 id="reader-title" class="text-2xl sm:text-3xl md:text-4xl font-bold font-serif-gu theme-text-primary leading-snug"></h1>
+                <header class="border-b theme-border pb-4 sm:pb-6 mb-5 sm:mb-8 text-center">
+                    <div id="reader-meta-path" class="text-xs sm:text-sm font-medium theme-accent-text mb-1.5"></div>
+                    <h1 id="reader-title" class="text-xl sm:text-3xl md:text-4xl font-bold font-serif-gu theme-text-primary leading-snug"></h1>
                 </header>
 
                 <!-- Parsed CDATA Content Body -->
-                <div id="reader-body" class="reader-content font-serif-gu leading-relaxed theme-text-primary transition-all duration-200" style="font-size: 20px; line-height: 1.9;">
+                <div id="reader-body" class="reader-content font-serif-gu leading-relaxed theme-text-primary transition-all duration-200" style="font-size: 19px; line-height: 1.85;">
                     <!-- Populated via JS -->
                 </div>
             </article>
 
             <!-- Next / Previous Chapter or Subchapter Navigation Footer -->
-            <div class="flex items-center justify-between gap-4 pt-2 pb-8">
-                <button id="btn-prev-item" onclick="navigateAdjacentItem(-1)" class="flex-1 p-4 rounded-2xl theme-bg-card border theme-border shadow-sm hover:border-amber-500 transition flex items-center gap-3 text-left disabled:opacity-40 disabled:pointer-events-none">
-                    <div class="p-2 rounded-xl theme-bg-secondary shrink-0">
-                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            <div class="grid grid-cols-2 gap-2.5 sm:gap-4 pt-1 pb-6">
+                <button id="btn-prev-item" onclick="navigateAdjacentItem(-1)" class="p-3 sm:p-4 rounded-2xl theme-bg-card border theme-border shadow-sm active:scale-[0.98] hover:border-amber-500 transition flex items-center gap-2 sm:gap-3 text-left disabled:opacity-40 disabled:pointer-events-none">
+                    <div class="p-1.5 sm:p-2 rounded-xl theme-bg-secondary shrink-0">
+                        <i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                     </div>
-                    <div class="overflow-hidden">
-                        <span class="block text-xs theme-text-secondary">અગાઉનું</span>
-                        <span id="prev-item-title" class="block text-sm font-semibold truncate theme-text-primary">-</span>
+                    <div class="overflow-hidden min-w-0">
+                        <span class="block text-[11px] sm:text-xs theme-text-secondary">અગાઉનું</span>
+                        <span id="prev-item-title" class="block text-xs sm:text-sm font-semibold truncate theme-text-primary">-</span>
                     </div>
                 </button>
 
-                <button id="btn-next-item" onclick="navigateAdjacentItem(1)" class="flex-1 p-4 rounded-2xl theme-bg-card border theme-border shadow-sm hover:border-amber-500 transition flex items-center justify-end gap-3 text-right disabled:opacity-40 disabled:pointer-events-none">
-                    <div class="overflow-hidden">
-                        <span class="block text-xs theme-text-secondary">આગળનું</span>
-                        <span id="next-item-title" class="block text-sm font-semibold truncate theme-text-primary">-</span>
+                <button id="btn-next-item" onclick="navigateAdjacentItem(1)" class="p-3 sm:p-4 rounded-2xl theme-bg-card border theme-border shadow-sm active:scale-[0.98] hover:border-amber-500 transition flex items-center justify-end gap-2 sm:gap-3 text-right disabled:opacity-40 disabled:pointer-events-none">
+                    <div class="overflow-hidden min-w-0">
+                        <span class="block text-[11px] sm:text-xs theme-text-secondary">આગળનું</span>
+                        <span id="next-item-title" class="block text-xs sm:text-sm font-semibold truncate theme-text-primary">-</span>
                     </div>
-                    <div class="p-2 rounded-xl theme-bg-secondary shrink-0">
-                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    <div class="p-1.5 sm:p-2 rounded-xl theme-bg-secondary shrink-0">
+                        <i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                     </div>
                 </button>
             </div>
@@ -348,16 +371,126 @@
 
     </main>
 
+    <!-- MOBILE FIXED BOTTOM READER BAR (Shown only on mobile when reading) -->
+    <div id="mobile-reader-bar" class="hidden sm:hidden fixed bottom-0 left-0 right-0 z-40 theme-bg-card border-t theme-border shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-3 py-2">
+        <div class="flex items-center justify-between gap-2">
+            <!-- Back Button -->
+            <button onclick="handleReaderBack()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold theme-bg-secondary border theme-border active:scale-95 transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>પાછા</span>
+            </button>
+
+            <!-- Font Size & Family Controls -->
+            <div class="flex items-center gap-1.5">
+                <button onclick="toggleReaderFontFamily()" id="mobile-font-family-btn" class="px-2.5 py-2 rounded-xl text-xs font-medium theme-bg-secondary border theme-border active:scale-95">
+                    ફોન્ટ
+                </button>
+
+                <div class="flex items-center rounded-xl theme-bg-secondary border theme-border p-0.5">
+                    <button onclick="changeFontSize(-2)" class="px-2.5 py-1.5 rounded-lg text-xs font-bold active:theme-bg-card">A-</button>
+                    <span id="mobile-font-size-label" class="px-1.5 text-[11px] font-medium theme-text-secondary">19</span>
+                    <button onclick="changeFontSize(2)" class="px-2.5 py-1.5 rounded-lg text-sm font-bold active:theme-bg-card">A+</button>
+                </div>
+
+                <button onclick="copyReaderContent()" class="p-2 rounded-xl theme-bg-secondary border theme-border active:scale-95" title="કોપી કરો">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="border-t theme-border theme-bg-secondary py-5 mt-12">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs theme-text-secondary">
-            <p>સત્સંગ પુસ્તકાલય • ડિજિટલ ગ્રંથાલય</p>
+    <footer class="border-t theme-border theme-bg-secondary py-5 mt-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-1.5 text-center sm:text-left text-xs theme-text-secondary">
+            <p class="font-medium">સત્સંગ પુસ્તકાલય • ડિજિટલ ગ્રંથાલય</p>
             <p>શ્રી સ્વામિનારાયણ સંપ્રદાયના આધ્યાત્મિક ગ્રંથો</p>
         </div>
     </footer>
 
     <!-- Application Logic -->
     <script>
+        /***********************************************************************
+         * 1. CONFIGURATION & INITIAL STATE
+         ***********************************************************************/
+        const GITHUB_CONFIG = {
+            username: "", // વૈકલ્પિક: તમારું GitHub username
+            repo: "",     // વૈકલ્પિક: તમારી Repository નું નામ
+            branch: "main",
+            folder: "books"
+        };
+
+        const BOOK_FILES = [
+            "books/મહિમા સાથે નિશ્ચય શા માટે.xml",
+            "books/વચનામૃત.xml"
+        ];
+
+        const PREVIEW_FALLBACK_XML = {
+            "books/મહિમા સાથે નિશ્ચય શા માટે.xml": `<chapters>
+<chapter>
+<chapter_name>મહિમા સાથે નિશ્ચય શા માટે ?</chapter_name>
+<content>
+<![CDATA[ “મહિમા સાથે નિશ્ચય શા માટે ?”
+
+હે વહાલા સંતો-ભક્તો ! આષાઢી સંવત ૧૮૭૭ ના કાર્તિક-વદ તેરસે લોયાધામમાં શ્રીહરિના સખા ભક્ત સુરા બાપુના દરબારગઢમાં રાત્રીએ સભામાં શ્રીજી મહારાજ ઢોલિયા ઉપર વિરાજમાન થયા હતા. તે સમયે તેઓની સાથે આગેવાન સંતો, નાના સંતો, આજુબાજુનાં ગામડાઓમાંથી આવેલ હરિભક્તો તેમજ લોયાગામના સત્સંગીઓ બેઠા હતા. ત્યારે ભગવદાનંદ સ્વામી અને શિવાનંદ સ્વામીએ મહારાજને પ્રશ્ન પૂછયો :
+
+“ પ્રશ્ન ”
+
+હે મહારાજ ! ભગવાનનો નિશ્ચય તો ઘણાને હોય છે, પણ મહિમા સહિત નિશ્ચય કોને કહેવાય અને તે શા માટે જરૂરી છે ? ]]>
+</content>
+</chapter>
+</chapters>`,
+            "books/વચનામૃત.xml": `<chapters>
+<chapter>
+<chapter_name>પરથારો</chapter_name>
+<sub_chapter>
+<sub_chapter_name>પરથારો</sub_chapter_name>
+<content>
+<![CDATA[ પરથારો
+
+पातुं धर्ममधर्ममुत्खयितुं श्रीभक्तिधर्मांतो,जातायोत्तरकोशलेषु दयया सर्वेश्वरेशाय च ।
+तृप्तिं वाक्यसुधारसैर्विदधते नैजैर्निजानां मुहु-स्तस्मै श्रीहरये नमोस्तु सहजानन्दाय सद्वर्णिने ।।१।।
+
+વચનામૃતની કુલ સંખ્યા ૨૭૩ ]]>
+</content>
+</sub_chapter>
+</chapter>
+<chapter>
+<chapter_name>ગઢડા પ્રથમ પ્રકરણ</chapter_name>
+<sub_chapter>
+1. <sub_chapter_name>ભગવત્સ્વરૂપમાં અખંડવૃત્તિ રાખવા</sub_chapter_name>
+<content>
+<![CDATA[ 1. ભગવત્સ્વરૂપમાં અખંડવૃત્તિ રાખવા
+
+સંવત્ ૧૮૭૬ ના માગશર સુદિ ૪ ચતુર્થીને દિવસ શ્રીજીમહારાજ શ્રીગઢડા મધ્યે દાદાખાચરના દરબારમાં સાધુની જાયગાને વિષે રાત્રિને સમયે પધાર્યા હતા અને સર્વે શ્વેત વસ્ત્ર ધારણ કર્યાં હતાં અને પોતાના મુખારવિંદની આગળ સાધુ તથા દેશદેશના હરિભક્તની સભા ભરાઇને બેઠી હતી. ]]>
+</content>
+</sub_chapter>
+</chapter>
+</chapters>`
+        };
+
+        let booksLibrary = [];
+        let appState = {
+            view: 'books',
+            selectedBookIndex: null,
+            selectedChapterIndex: null,
+            selectedSubChapterIndex: null,
+            searchQuery: '',
+            fontSize: window.innerWidth < 640 ? 18 : 20,
+            isSerifFont: true
+        };
+
+        function getBookNameFromFilename(xmlPath) {
+            if (!xmlPath) return "પુસ્તક";
+            const fileName = xmlPath.split('/').pop();
+            return decodeURIComponent(fileName).replace(/\.xml$/i, '').trim();
+        }
+
+        function extractSmartSummary(chapters) {
+            if (!chapters || chapters.length === 0) return "અનુક્રમણિકા અને પ્રકરણો વાંચો";
+            const titles = chapters.slice(0, 3).map(c => c.title);
+            return `સમાવિષ્ટ: ${titles.join(' • ')}${chapters.length > 3 ? '...' : ''}`;
+        }
+
         /***********************************************************************
          * 3. XML PARSER (સીધા ચેપ્ટર અને સબ-ચેપ્ટર બંને માટે - ડબલ સેફ્ટી પાર્સર)
          ***********************************************************************/
@@ -708,6 +841,12 @@
             document.getElementById('view-subchapters').classList.toggle('hidden', appState.view !== 'subchapters');
             document.getElementById('view-reader').classList.toggle('hidden', appState.view !== 'reader');
 
+            // Toggle Mobile Fixed Bottom Reader Bar
+            const mobileReaderBar = document.getElementById('mobile-reader-bar');
+            if (mobileReaderBar) {
+                mobileReaderBar.classList.toggle('hidden', appState.view !== 'reader');
+            }
+
             // Hide search bar in reader view to keep focus clean
             document.getElementById('search-container').classList.toggle('hidden', appState.view === 'reader');
 
@@ -719,6 +858,53 @@
             else if (appState.view === 'reader') renderReaderView();
 
             lucide.createIcons();
+        }
+
+        function renderBreadcrumbs() {
+            const nav = document.getElementById('breadcrumb-nav');
+            const crumbs = [];
+
+            // Home Crumb
+            crumbs.push(`
+                <button onclick="navigateToHome()" class="inline-flex items-center gap-1 font-medium shrink-0 py-1 ${appState.view === 'books' ? 'theme-accent-text font-bold' : 'theme-text-secondary hover:theme-text-primary'}">
+                    <i data-lucide="library" class="w-3.5 h-3.5"></i>
+                    <span>પુસ્તકાલય</span>
+                </button>
+            `);
+
+            if (appState.selectedBookIndex !== null) {
+                const book = booksLibrary[appState.selectedBookIndex];
+                crumbs.push(`<i data-lucide="chevron-right" class="w-3.5 h-3.5 theme-text-secondary shrink-0"></i>`);
+                crumbs.push(`
+                    <button onclick="selectBook(${appState.selectedBookIndex})" class="truncate max-w-[130px] sm:max-w-[240px] py-1 ${appState.view === 'chapters' ? 'theme-accent-text font-bold' : 'theme-text-secondary hover:theme-text-primary'}">
+                        ${escapeHtml(book.title)}
+                    </button>
+                `);
+
+                if (appState.selectedChapterIndex !== null) {
+                    const chapter = book.chapters[appState.selectedChapterIndex];
+                    crumbs.push(`<i data-lucide="chevron-right" class="w-3.5 h-3.5 theme-text-secondary shrink-0"></i>`);
+                    crumbs.push(`
+                        <button onclick="selectChapter(${appState.selectedChapterIndex})" class="truncate max-w-[130px] sm:max-w-[240px] py-1 ${(appState.view === 'subchapters' || (appState.view === 'reader' && !chapter.hasSubChapters)) ? 'theme-accent-text font-bold' : 'theme-text-secondary hover:theme-text-primary'}">
+                            ${escapeHtml(chapter.title)}
+                        </button>
+                    `);
+
+                    if (appState.selectedSubChapterIndex !== null && chapter.hasSubChapters) {
+                        const sub = chapter.subChapters[appState.selectedSubChapterIndex];
+                        crumbs.push(`<i data-lucide="chevron-right" class="w-3.5 h-3.5 theme-text-secondary shrink-0"></i>`);
+                        crumbs.push(`
+                            <span class="truncate max-w-[140px] sm:max-w-[240px] theme-accent-text font-bold py-1">
+                                ${escapeHtml(sub.title)}
+                            </span>
+                        `);
+                    }
+                }
+            }
+
+            nav.innerHTML = crumbs.join('');
+            // Auto-scroll breadcrumb to the rightmost active item on mobile
+            nav.scrollLeft = nav.scrollWidth;
         }
 
         function renderBreadcrumbs() {
@@ -800,22 +986,22 @@
                         : `${book.chapters.length} પ્રકરણો`);
 
                 return `
-                    <div onclick="selectBook(${index})" class="group cursor-pointer rounded-2xl theme-bg-card border theme-border p-5 shadow-sm hover:shadow-md hover:border-amber-500 transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
+                    <div onclick="selectBook(${index})" class="group cursor-pointer rounded-2xl theme-bg-card border theme-border p-4 sm:p-5 shadow-sm active:scale-[0.99] hover:shadow-md hover:border-amber-500 transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
                         <!-- Decorative top corner mandala accent -->
                         <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full theme-accent-light opacity-60 group-hover:scale-125 transition-transform pointer-events-none"></div>
 
-                        <div class="flex items-start gap-4 relative z-10">
+                        <div class="flex items-start gap-3.5 sm:gap-4 relative z-10">
                             <!-- Book 3D Cover Icon -->
-                            <div class="w-14 h-20 rounded-xl spiritual-header-gradient text-white flex flex-col items-center justify-center shadow-md shrink-0 relative overflow-hidden group-hover:scale-105 transition-transform">
+                            <div class="w-12 h-16 sm:w-14 sm:h-20 rounded-xl spiritual-header-gradient text-white flex flex-col items-center justify-center shadow-md shrink-0 relative overflow-hidden group-hover:scale-105 transition-transform">
                                 <div class="absolute left-0 top-0 bottom-0 w-2 book-spine"></div>
-                                <i data-lucide="book-marked" class="w-6 h-6"></i>
+                                <i data-lucide="book-marked" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                             </div>
 
                             <div class="flex-1 min-w-0">
-                                <span class="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full theme-accent-light theme-accent-text mb-1.5">
+                                <span class="inline-block text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full theme-accent-light theme-accent-text mb-1">
                                     ${escapeHtml(book.category)}
                                 </span>
-                                <h3 class="text-lg font-bold font-serif-gu theme-text-primary group-hover:theme-accent-text transition line-clamp-2">
+                                <h3 class="text-base sm:text-lg font-bold font-serif-gu theme-text-primary group-hover:theme-accent-text transition line-clamp-2 leading-snug">
                                     ${escapeHtml(book.title)}
                                 </h3>
                                 <p class="text-xs theme-text-secondary mt-1 line-clamp-2">
@@ -824,7 +1010,7 @@
                             </div>
                         </div>
 
-                        <div class="mt-5 pt-3 border-t theme-border flex items-center justify-between text-xs relative z-10">
+                        <div class="mt-3.5 sm:mt-5 pt-2.5 sm:pt-3 border-t theme-border flex items-center justify-between text-xs relative z-10">
                             <span class="font-medium theme-text-secondary flex items-center gap-1.5">
                                 <i data-lucide="layers" class="w-3.5 h-3.5 theme-accent-text"></i>
                                 ${structureLabel}
@@ -845,6 +1031,8 @@
             document.getElementById('current-book-title').textContent = book.title;
             document.getElementById('current-book-subtitle').textContent = book.description || book.category;
             document.getElementById('chapters-total-count').textContent = book.chapters.length;
+            const mobCount = document.getElementById('chapters-total-count-mobile');
+            if (mobCount) mobCount.textContent = book.chapters.length;
 
             const query = appState.searchQuery.toLowerCase();
             const listEl = document.getElementById('chapters-list');
@@ -867,30 +1055,33 @@
 
             listEl.innerHTML = filteredChapters.map(({ chap, idx }) => {
                 const badgeHtml = chap.hasSubChapters
-                    ? `<span class="text-xs px-2.5 py-1 rounded-xl theme-accent-light theme-accent-text font-medium flex items-center gap-1 shrink-0">
-                         <i data-lucide="list-tree" class="w-3.5 h-3.5"></i>
+                    ? `<span class="text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl theme-accent-light theme-accent-text font-medium inline-flex items-center gap-1 shrink-0">
+                         <i data-lucide="list-tree" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i>
                          ${chap.subChapters.length} પેટા-પ્રકરણ
                        </span>`
-                    : `<span class="text-xs px-2.5 py-1 rounded-xl theme-bg-secondary theme-text-secondary font-medium flex items-center gap-1 shrink-0">
-                         <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                    : `<span class="text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl theme-bg-secondary theme-text-secondary font-medium inline-flex items-center gap-1 shrink-0">
+                         <i data-lucide="file-text" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i>
                          સીધું વાંચન
                        </span>`;
 
                 return `
-                    <div onclick="selectChapter(${idx})" class="group cursor-pointer p-4 sm:p-5 rounded-2xl theme-bg-card border theme-border hover:border-amber-500 shadow-sm hover:shadow transition flex items-center justify-between gap-4">
-                        <div class="flex items-center gap-3.5 min-w-0">
-                            <div class="w-9 h-9 rounded-xl theme-accent-light theme-accent-text font-bold text-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div onclick="selectChapter(${idx})" class="group cursor-pointer p-3.5 sm:p-5 rounded-2xl theme-bg-card border theme-border active:scale-[0.99] hover:border-amber-500 shadow-sm hover:shadow transition flex items-center justify-between gap-3">
+                        <div class="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl theme-accent-light theme-accent-text font-bold text-xs sm:text-sm flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
                                 ${idx + 1}
                             </div>
-                            <div class="min-w-0">
-                                <h3 class="text-base sm:text-lg font-bold font-serif-gu theme-text-primary group-hover:theme-accent-text transition truncate">
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-base sm:text-lg font-bold font-serif-gu theme-text-primary group-hover:theme-accent-text transition leading-snug">
                                     ${escapeHtml(chap.title)}
                                 </h3>
+                                <div class="mt-1.5 sm:hidden">
+                                    ${badgeHtml}
+                                </div>
                             </div>
                         </div>
 
                         <div class="flex items-center gap-3 shrink-0">
-                            ${badgeHtml}
+                            <div class="hidden sm:block">${badgeHtml}</div>
                             <i data-lucide="chevron-right" class="w-5 h-5 theme-text-secondary group-hover:theme-accent-text group-hover:translate-x-1 transition-transform"></i>
                         </div>
                     </div>
@@ -906,6 +1097,8 @@
             document.getElementById('subchapter-parent-book').textContent = book.title;
             document.getElementById('current-chapter-title').textContent = chapter.title;
             document.getElementById('subchapters-total-count').textContent = chapter.subChapters.length;
+            const mobSubCount = document.getElementById('subchapters-total-count-mobile');
+            if (mobSubCount) mobSubCount.textContent = chapter.subChapters.length;
 
             const query = appState.searchQuery.toLowerCase();
             const listEl = document.getElementById('subchapters-list');
@@ -924,16 +1117,16 @@
             }
 
             listEl.innerHTML = filteredSubs.map(({ sub, idx }) => `
-                <div onclick="selectSubChapter(${idx})" class="group cursor-pointer p-4 sm:p-5 rounded-2xl theme-bg-card border theme-border hover:border-amber-500 shadow-sm hover:shadow transition flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3.5 min-w-0">
-                        <div class="w-8 h-8 rounded-lg theme-bg-secondary theme-text-secondary font-semibold text-xs flex items-center justify-center shrink-0 group-hover:theme-accent-bg group-hover:text-white transition">
+                <div onclick="selectSubChapter(${idx})" class="group cursor-pointer p-3.5 sm:p-5 rounded-2xl theme-bg-card border theme-border active:scale-[0.99] hover:border-amber-500 shadow-sm hover:shadow transition flex items-center justify-between gap-3">
+                    <div class="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg theme-bg-secondary theme-text-secondary font-semibold text-xs flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 group-hover:theme-accent-bg group-hover:text-white transition">
                             ${idx + 1}
                         </div>
-                        <h3 class="text-base sm:text-lg font-semibold font-serif-gu theme-text-primary group-hover:theme-accent-text transition">
+                        <h3 class="text-sm sm:text-lg font-semibold font-serif-gu theme-text-primary group-hover:theme-accent-text transition leading-snug">
                             ${escapeHtml(sub.title)}
                         </h3>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-1.5 shrink-0">
                         <span class="text-xs theme-accent-text font-medium hidden sm:inline">વાંચો</span>
                         <i data-lucide="book-open-check" class="w-4 h-4 theme-accent-text"></i>
                     </div>
@@ -981,7 +1174,12 @@
 
             document.getElementById('reader-meta-path').textContent = metaPath;
             document.getElementById('reader-title').textContent = title;
-            document.getElementById('reader-body').innerHTML = formatSpiritualContent(rawContent, title);
+            const readerBody = document.getElementById('reader-body');
+            readerBody.style.fontSize = appState.fontSize + 'px';
+            readerBody.innerHTML = formatSpiritualContent(rawContent, title);
+            document.getElementById('font-size-label').textContent = appState.fontSize + 'px';
+            const mobSizeLabel = document.getElementById('mobile-font-size-label');
+            if (mobSizeLabel) mobSizeLabel.textContent = appState.fontSize;
 
             // Configure Prev / Next Buttons
             const prevBtn = document.getElementById('btn-prev-item');
@@ -1040,20 +1238,25 @@
             const readerBody = document.getElementById('reader-body');
             readerBody.style.fontSize = appState.fontSize + 'px';
             document.getElementById('font-size-label').textContent = appState.fontSize + 'px';
+            const mobSizeLabel = document.getElementById('mobile-font-size-label');
+            if (mobSizeLabel) mobSizeLabel.textContent = appState.fontSize;
         }
 
         function toggleReaderFontFamily() {
             appState.isSerifFont = !appState.isSerifFont;
             const readerBody = document.getElementById('reader-body');
             const btn = document.getElementById('font-family-btn');
+            const mobBtn = document.getElementById('mobile-font-family-btn');
             if (appState.isSerifFont) {
                 readerBody.classList.remove('font-sans-gu');
                 readerBody.classList.add('font-serif-gu');
-                btn.textContent = 'સેરિફ ફોન્ટ';
+                if (btn) btn.textContent = 'સેરિફ ફોન્ટ';
+                if (mobBtn) mobBtn.textContent = 'સેરિફ';
             } else {
                 readerBody.classList.remove('font-serif-gu');
                 readerBody.classList.add('font-sans-gu');
-                btn.textContent = 'સાદા ફોન્ટ';
+                if (btn) btn.textContent = 'સાદા ફોન્ટ';
+                if (mobBtn) mobBtn.textContent = 'સાદા';
             }
         }
 
