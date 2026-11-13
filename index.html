@@ -359,44 +359,33 @@
     <!-- Application Logic -->
     <script>
         /***********************************************************************
-         * 1. BOOKS FOLDER CONFIGURATION (તમારા GitHub ના `books/` ફોલ્ડરનું લિસ્ટ)
+         * 1. BOOKS FOLDER CONFIGURATION (તમારા GitHub ના `books/` ફોલ્ડરનું સેટઅપ)
          * ---------------------------------------------------------------------
-         * રીત ૧: તમારા `books/` ફોલ્ડરમાં રહેલી XML ફાઇલોના નામ નીચે `BOOKS_CONFIG` માં લખો.
-         * રીત ૨: અથવા જો તમારે ઓટોમેટિક બધી XML ફાઇલો લોડ કરવી હોય, તો નીચે `GITHUB_CONFIG` માં
-         *        તમારું GitHub username અને repo નું નામ લખી દો, એટલે `books/` ફોલ્ડરની બધી જ
-         *        .xml ફાઇલો આપોઆપ લોડ થઈ જશે!
+         * હવે તમારે બુકના નામ (Title) જાતે લખવાની જરૂર નથી! 
+         * એપ આપોઆપ XML ની અંદરથી અથવા ફાઇલના નામ પરથી બુકનું નામ શોધી લેશે.
+         * 
+         * વિકલ્પ A (સૌથી સરળ - 100% ઓટોમેટિક): 
+         * નીચે `GITHUB_CONFIG` માં ફક્ત તમારું GitHub `username` અને `repo` લખી દો.
+         * તમે `books/` ફોલ્ડરમાં જેટલી પણ .xml ફાઇલ મૂકશો તે બધી આપોઆપ આવી જશે!
+         * 
+         * વિકલ્પ B (ફાઇલ લિસ્ટ): 
+         * નીચે `BOOK_FILES` માં ફક્ત ફાઇલનો પાથ લખો, બુકનું નામ XML માંથી આપોઆપ આવી જશે.
          ***********************************************************************/
         
         const GITHUB_CONFIG = {
-            username: "", // દા.ત. "your-github-username" (ખાલી રાખશો તો નીચેના BOOKS_CONFIG મુજબ ચાલશે)
+            username: "", // દા.ત. "your-github-username"
             repo: "",     // દા.ત. "satsang-books"
             branch: "main",
             folder: "books"
         };
 
-        const BOOKS_CONFIG = [
-            {
-                id: "book-mahima",
-                title: "મહિમા સાથે નિશ્ચય શા માટે ?",
-                category: "સત્સંગ કથા અને પ્રશ્નોત્તરી",
-                description: "લોયાધામમાં શ્રીજી મહારાજ અને સંતો-ભક્તો વચ્ચે થયેલ મહિમા સભર સંવાદ.",
-                xmlPath: "books/mahima.xml"
-            },
-            {
-                id: "book-vachanamrut",
-                title: "વચનામૃત",
-                category: "શ્રીજી મહારાજના વચનામૃત",
-                description: "પરથારો તેમજ ગઢડા પ્રથમ પ્રકરણના વચનામૃતો (પેટા-પ્રકરણ સાથે).",
-                xmlPath: "books/vachanamrut.xml"
-            }
-            // તમારા `books/` ફોલ્ડરની બીજી XML ફાઇલો અહીં નીચે ઉમેરો:
-            // {
-            //     id: "book-3",
-            //     title: "ભક્તચિંતામણી",
-            //     category: "સંપ્રદાય ગ્રંથ",
-            //     description: "શ્રી નિષ્કુળાનંદ સ્વામી રચિત ભક્તચિંતામણી ગ્રંથ.",
-            //     xmlPath: "books/bhaktachintamani.xml"
-            // }
+        // ફક્ત XML ફાઇલના નામ/પાથ (બુકનું નામ XML માંથી ઓટોમેટિક શોધાઈ જશે!)
+        const BOOK_FILES = [
+            "books/mahima.xml",
+            "books/vachanamrut.xml"
+            // ભવિષ્યમાં ફક્ત ફાઇલનું નામ ઉમેરો, દા.ત.:
+            // "books/bhaktachintamani.xml",
+            // "books/શિક્ષાપત્રી.xml"
         ];
 
         /***********************************************************************
@@ -477,21 +466,150 @@
         };
 
         /***********************************************************************
-         * 2. APPLICATION STATE
+         * 3. SMART XML PARSER & AUTO BOOK-NAME DETECTOR
+         * ---------------------------------------------------------------------
+         * બુકનું નામ શોધવાનો ઓટોમેટિક ક્રમ (Priority):
+         * 1. જો XML માં <book_name> અથવા <title> ટેગ હોય તો તેમાંથી લેશે.
+         * 2. જો XML ફાઇલનું નામ ગુજરાતીમાં હોય (દા.ત. "વચનામૃત.xml") તો તે લેશે.
+         * 3. જો બુકમાં 1 કે 2 જ પ્રકરણ હોય તો પહેલા <chapter_name> નું નામ બુકને આપશે.
+         * 4. જો મોટો ગ્રંથ હોય (જેમ કે વચનામૃત - જેમાં અંદરના લખાણમાં ગ્રંથનું નામ કે 
+         *    પ્રથમ ચેપ્ટર હોય) તો તેમાંથી સ્માર્ટ રીતે નામ શોધી કાઢશે!
          ***********************************************************************/
-        let booksLibrary = [];
-        let appState = {
-            view: 'books', // 'books' | 'chapters' | 'subchapters' | 'reader'
-            selectedBookIndex: null,
-            selectedChapterIndex: null,
-            selectedSubChapterIndex: null, // null if reading a direct chapter
-            searchQuery: '',
-            fontSize: 20,
-            isSerifFont: true
-        };
+        function extractSmartBookTitle(xmlDoc, chapters, xmlPath, manualTitle) {
+            if (manualTitle && manualTitle.trim() !== "") {
+                return manualTitle.trim();
+            }
+
+            // 1. Check root attribute: <chapters book_name="..." title="...">
+            const rootEl = xmlDoc.documentElement;
+            if (rootEl) {
+                const attrTitle = rootEl.getAttribute("book_name") || rootEl.getAttribute("title") || rootEl.getAttribute("name");
+                if (attrTitle && attrTitle.trim()) return attrTitle.trim();
+            }
+
+            // 2. Check explicit <book_name> or <book_title> tag inside XML
+            const bookNameTag = xmlDoc.getElementsByTagName("book_name")[0] || xmlDoc.getElementsByTagName("book_title")[0];
+            if (bookNameTag && bookNameTag.textContent.trim()) {
+                return bookNameTag.textContent.trim();
+            }
+
+            // 3. Check if filename itself is in Gujarati script (e.g., books/વચનામૃત.xml)
+            const rawFileName = decodeURIComponent((xmlPath || "").split('/').pop().replace(/\.xml$/i, '')).replace(/[-_]/g, ' ').trim();
+            const hasGujaratiChars = /[\u0A80-\u0AFF]/.test(rawFileName);
+            if (hasGujaratiChars) {
+                return rawFileName;
+            }
+
+            // 4. Smart detection from XML content & chapters
+            if (chapters.length > 0) {
+                const firstChapTitle = chapters[0].title;
+                const firstContent = chapters[0].hasSubChapters 
+                    ? (chapters[0].subChapters[0]?.content || "") 
+                    : (chapters[0].content || "");
+
+                // જો પહેલા ચેપ્ટરનું નામ "પરથારો" કે "પ્રસ્તાવના" જેવું હોય, તો કન્ટેન્ટ કે બીજા ચેપ્ટર પરથી ગ્રંથનું નામ શોધો
+                const genericFirstChapters = ["પરથારો", "પ્રસ્તાવના", "અનુક્રમણિકા", "નિવેદન", "મંગલાચરણ"];
+                if (genericFirstChapters.includes(firstChapTitle)) {
+                    if (firstContent.includes("વચનામૃત")) {
+                        return "વચનામૃત";
+                    }
+                    if (chapters.length > 1) {
+                        return `${chapters[1].title} (${firstChapTitle})`;
+                    }
+                }
+
+                // ડિફોલ્ટ: પહેલા <chapter_name> નું નામ જ બુકના નામ તરીકે લઇ લો
+                return firstChapTitle;
+            }
+
+            return rawFileName || "સત્સંગ ગ્રંથ";
+        }
+
+        function extractSmartSummary(chapters) {
+            if (!chapters || chapters.length === 0) return "આધ્યાત્મિક સત્સંગ ગ્રંથ";
+            
+            // Show preview of chapter names as book subtitle
+            const chapNames = chapters.slice(0, 3).map(c => c.title).join(" • ");
+            const moreCount = chapters.length > 3 ? ` અને બીજા ${chapters.length - 3} પ્રકરણો` : "";
+            return `સમાવિષ્ટ: ${chapNames}${moreCount}`;
+        }
+
+        function parseBookXml(xmlString, bookMeta = {}) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString.trim(), "text/xml");
+            const chapterNodes = Array.from(xmlDoc.getElementsByTagName("chapter"));
+
+            let hasNestedStructure = false;
+
+            const chapters = chapterNodes.map((chapNode, cIdx) => {
+                const chapterNameEl = chapNode.getElementsByTagName("chapter_name")[0];
+                const chapterTitle = chapterNameEl ? chapterNameEl.textContent.trim() : `પ્રકરણ ${cIdx + 1}`;
+
+                const subChapterNodes = Array.from(chapNode.getElementsByTagName("sub_chapter"));
+
+                if (subChapterNodes.length > 0) {
+                    hasNestedStructure = true;
+                    const subChapters = subChapterNodes.map((subNode, sIdx) => {
+                        const subNameEl = subNode.getElementsByTagName("sub_chapter_name")[0];
+                        const rawSubName = subNameEl ? subNameEl.textContent.trim() : `પેટા-પ્રકરણ ${sIdx + 1}`;
+
+                        // Also check if there is a leading number prefix right before <sub_chapter_name> inside <sub_chapter>
+                        let prefixText = "";
+                        for (const child of subNode.childNodes) {
+                            if (child.nodeType === Node.TEXT_NODE) {
+                                const t = child.textContent.trim();
+                                if (t) prefixText += t + " ";
+                            } else if (child.nodeName === "sub_chapter_name") {
+                                break;
+                            }
+                        }
+
+                        const fullSubTitle = (prefixText + rawSubName).replace(/\s+/g, ' ').trim();
+                        const contentEl = subNode.getElementsByTagName("content")[0];
+                        const contentText = contentEl ? contentEl.textContent.trim() : "";
+
+                        return {
+                            title: fullSubTitle,
+                            content: contentText
+                        };
+                    });
+
+                    return {
+                        title: chapterTitle,
+                        hasSubChapters: true,
+                        subChapters: subChapters,
+                        content: ""
+                    };
+                } else {
+                    const contentEl = chapNode.getElementsByTagName("content")[0];
+                    const contentText = contentEl ? contentEl.textContent.trim() : "";
+
+                    return {
+                        title: chapterTitle,
+                        hasSubChapters: false,
+                        subChapters: [],
+                        content: contentText
+                    };
+                }
+            });
+
+            const autoBookTitle = extractSmartBookTitle(xmlDoc, chapters, bookMeta.xmlPath, bookMeta.title);
+            const autoCategory = bookMeta.category || (hasNestedStructure ? "શ્રીજી મહારાજના ગ્રંથો (પેટા-પ્રકરણ સહિત)" : "સત્સંગ કથા અને પ્રકરણો");
+            const autoDescription = bookMeta.description || extractSmartSummary(chapters);
+
+            return {
+                id: bookMeta.id || `book-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                title: autoBookTitle,
+                category: autoCategory,
+                description: autoDescription,
+                xmlPath: bookMeta.xmlPath || "",
+                hasNestedStructure: hasNestedStructure,
+                chapters: chapters
+            };
+        }
 
         /***********************************************************************
-         * 4. INITIALIZATION & AUTOMATIC LOADING FROM `books/` FOLDER
+         * 4. FAST PARALLEL LOADING FROM `books/` FOLDER
          ***********************************************************************/
         async function initApp() {
             setTheme('sepia');
@@ -502,22 +620,12 @@
             booksViewEl.classList.add('hidden');
             lucide.createIcons();
 
-            let bookManifestList = [...BOOKS_CONFIG];
+            // Convert simple file paths or objects into normalized list
+            let bookManifestList = BOOK_FILES.map((item, idx) => 
+                typeof item === 'string' ? { id: `book-${idx}`, xmlPath: item } : item
+            );
 
-            // 1. Optional: Try loading `books/books.json` if the user created a manifest file
-            try {
-                const manifestResp = await fetch('books/books.json', { cache: 'no-cache' });
-                if (manifestResp.ok) {
-                    const jsonList = await manifestResp.json();
-                    if (Array.isArray(jsonList) && jsonList.length > 0) {
-                        bookManifestList = jsonList;
-                    }
-                }
-            } catch (e) {
-                // Ignore if books/books.json does not exist
-            }
-
-            // 2. Optional: If GITHUB_CONFIG has username & repo, auto-discover all .xml files in `books/` folder via GitHub API
+            // 1. Optional: If GITHUB_CONFIG has username & repo, auto-discover all .xml files in `books/` folder via GitHub API
             if (GITHUB_CONFIG.username && GITHUB_CONFIG.repo) {
                 try {
                     const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.folder}?ref=${GITHUB_CONFIG.branch || 'main'}`;
@@ -528,9 +636,6 @@
                         if (xmlFiles.length > 0) {
                             bookManifestList = xmlFiles.map((file, idx) => ({
                                 id: `gh-book-${idx}`,
-                                title: decodeURIComponent(file.name.replace(/\.xml$/i, '').replace(/[-_]/g, ' ')),
-                                category: 'સત્સંગ ગ્રંથ',
-                                description: '',
                                 xmlPath: `${GITHUB_CONFIG.folder}/${file.name}`
                             }));
                         }
@@ -540,32 +645,32 @@
                 }
             }
 
-            // 3. Fetch each XML file from the `books/` folder
-            const loadedBooks = [];
-            for (const bookMeta of bookManifestList) {
+            // 2. FAST PARALLEL FETCH (`Promise.all`) - બધી XML ફાઇલો એકસાથે સમાંતર (Parallel) સ્પીડમાં લોડ થશે!
+            const fetchPromises = bookManifestList.map(async (bookMeta) => {
                 let xmlText = null;
 
                 try {
-                    const response = await fetch(bookMeta.xmlPath, { cache: 'no-cache' });
+                    const response = await fetch(bookMeta.xmlPath, { cache: 'default' });
                     if (response.ok) {
                         xmlText = await response.text();
                     }
                 } catch (fetchErr) {
-                    // Fetch failed (e.g., running in live preview without actual `books/` folder yet)
+                    // Fallback to preview XML if local file isn't hosted yet
                 }
 
-                // Fallback to built-in preview XML only if local/GitHub file wasn't found in preview
                 if (!xmlText && PREVIEW_FALLBACK_XML[bookMeta.xmlPath]) {
                     xmlText = PREVIEW_FALLBACK_XML[bookMeta.xmlPath];
                 }
 
                 if (xmlText) {
-                    const parsedBook = parseBookXml(xmlText, bookMeta);
-                    loadedBooks.push(parsedBook);
+                    return parseBookXml(xmlText, bookMeta);
                 }
-            }
+                return null;
+            });
 
-            booksLibrary = loadedBooks;
+            const results = await Promise.all(fetchPromises);
+            booksLibrary = results.filter(Boolean);
+
             loadingEl.classList.add('hidden');
             renderApp();
         }
