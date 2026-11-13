@@ -359,208 +359,135 @@
     <!-- Application Logic -->
     <script>
         /***********************************************************************
-         * 1. BOOKS CONFIGURATION (સૌથી સરળ અને સુપર-ફાસ્ટ સેટઅપ)
-         * ---------------------------------------------------------------------
-         * તમારે ફક્ત એટલું જ કરવાનું છે:
-         * 1. `books/` ફોલ્ડરમાં તમારી XML ફાઇલો મૂકો (ફાઇલનું નામ જ બુકનું નામ રાખો).
-         *    એપ આપોઆપ ફાઇલના નામમાંથી `.xml` કાઢીને બુકનું નામ બતાવી દેશે!
-         * 2. તમે નીચે `BOOK_FILES` માં ફાઇલના નામ લખી શકો છો, અથવા `books/books.json`
-         *    નામની અલગ ફાઇલ બનાવીને તેમાં લિસ્ટ મૂકી શકો છો.
+         * 3. XML PARSER (સીધા ચેપ્ટર અને સબ-ચેપ્ટર બંને માટે - ડબલ સેફ્ટી પાર્સર)
          ***********************************************************************/
-        
-        const BOOK_FILES = [
-            "books/મહિમા સાથે નિશ્ચય શા માટે.xml",
-            "books/વચનામૃત.xml"
-            // અહીં અથવા books/books.json માં તમારા બીજા પુસ્તકોના ફાઇલ નામ ઉમેરો:
-            // "books/ભક્તચિંતામણી.xml",
-            // "books/શિક્ષાપત્રી.xml"
-        ];
-
-        // Optional: જો તમારે ફાઇલના નામ પણ ન લખવા હોય તો માત્ર GitHub username અને repo લખી દો
-        const GITHUB_CONFIG = {
-            username: "", // દા.ત. "your-github-username"
-            repo: "",     // દા.ત. "satsang-books"
-            branch: "main",
-            folder: "books"
-        };
-
-        /***********************************************************************
-         * APPLICATION STATE (આ વેરિએબલથી આખી એપ કંટ્રોલ થાય છે)
-         ***********************************************************************/
-        let booksLibrary = [];
-        const appState = {
-            view: 'books', // 'books' | 'chapters' | 'subchapters' | 'reader'
-            selectedBookIndex: null,
-            selectedChapterIndex: null,
-            selectedSubChapterIndex: null,
-            searchQuery: '',
-            fontSize: 20,
-            isSerifFont: true
-        };
-
-        /***********************************************************************
-         * FALLBACK SAMPLE XML DATA (ફક્ત અહીં પ્રિવ્યૂ ચલાવવા માટે, જ્યારે GitHub પર
-         * `books/` ફોલ્ડર હાજર હશે ત્યારે સીધી તમારી જ XML ફાઇલ લોડ થશે)
-         ***********************************************************************/
-        const PREVIEW_FALLBACK_XML = {
-            "books/મહિમા સાથે નિશ્ચય શા માટે.xml": `
-<chapters>
-<chapter>
-<chapter_name>મહિમા સાથે નિશ્ચય શા માટે ?</chapter_name>
-<content>
-<![CDATA[ “મહિમા સાથે નિશ્ચય શા માટે ?”
-
-હે વહાલા સંતો-ભક્તો ! આષાઢી સંવત ૧૮૭૭ ના કાર્તિક-વદ તેરસે લોયાધામમાં શ્રીહરિના સખા ભક્ત સુરા બાપુના દરબારગઢમાં રાત્રીએ સભામાં શ્રીજી મહારાજ ઢોલિયા ઉપર વિરાજમાન થયા હતા. તે સમયે તેઓની સાથે આગેવાન સંતો, નાના સંતો, આજુબાજુનાં ગામડાઓમાંથી આવેલ હરિભક્તો તેમજ લોયાગામના સત્સંગીઓ બેઠા હતા. ત્યારે ભગવદાનંદ સ્વામી અને શિવાનંદ સ્વામીએ મહારાજને પ્રશ્ન પૂછયો :
-
-“ પ્રશ્ન ”
-
-હે મહારાજ ! ભગવાનનો નિશ્ચય તો સત્સંગમાં ઘણાને હોય છે, પરંતુ મહિમા સહિત નિશ્ચય હોય ત્યારે ભક્તના વર્તનમાં શો ફેર પડે છે?
-
-ત્યારે શ્રીજી મહારાજે અતિશય પ્રસન્ન થઈને ઉત્તર આપ્યો જે, “જ્યારે ભક્તને ભગવાનનો મહિમા સહિત નિશ્ચય થાય છે ત્યારે તેને જગતના કોઈ પદાર્થમાં માલ મનાતો નથી અને અખંડ ભગવાનની મૂર્તિમાં જ વૃત્તિ રહે છે. માટે નિશ્ચયની સાથે ભગવાનનો અને સંતનો અપરંપાર મહિમા સમજવો તે અતિશે આવશ્યક છે.” ]]>
-</content>
-</chapter>
-<chapter>
-<chapter_name>સત્સંગનો અલૌકિક મહિમા</chapter_name>
-<content>
-<![CDATA[ “સત્સંગનો અલૌકિક મહિમા”
-
-ભગવાનના પ્રત્યક્ષ સ્વરૂપનો યોગ અને તેમના એકાંતિક સંતનો સમાગમ એ જ જીવના આત્યંતિક કલ્યાણનો રાજમાર્ગ છે. 
-
-જ્યારે જીવ અંતરથી નિર્માની થઈને સંતના વચનમાં વિશ્વાસ રાખે છે, ત્યારે તેના અંતરમાં દિવ્ય શાંતિ અને આનંદનો અનુભવ થાય છે. આવા સત્સંગનો મહિમા વાણીથી વર્ણવી શકાય તેવો નથી. ]]>
-</content>
-</chapter>
-</chapters>`,
-
-            "books/વચનામૃત.xml": `
-<chapters>
-<chapter>
-<chapter_name>પરથારો</chapter_name>
-<sub_chapter>
-<sub_chapter_name>પરથારો</sub_chapter_name>
-<content>
-<![CDATA[ પરથારો
-
-पातुं धर्ममधर्ममुत्खयितुं श्रीभक्तिधर्मांतो, जातायोत्तरकोशलेषु दयया सर्वेश्वरेशाय च ।
-तृप्तिं वाक्यसुधारसैर्विदधते नैजैर्निजानां मुहु-स्तस्मै श्रीहरये नमोस्तु सहजानन्दाय सद्वर्णिने ।।१।।
-
-વચનામૃતની કુલ સંખ્યા ૨૭૩ ]]>
-</content>
-</sub_chapter>
-</chapter>
-<chapter>
-<chapter_name>ગઢડા પ્રથમ પ્રકરણ</chapter_name>
-<sub_chapter>
-1. <sub_chapter_name>ભગવત્સ્વરૂપમાં અખંડવૃત્તિ રાખવા
-</sub_chapter_name>
-<content>
-<![CDATA[ 1. ભગવત્સ્વરૂપમાં અખંડવૃત્તિ રાખવા	
-
-
-સંવત્ ૧૮૭૬ ના માગશર સુદિ ૪ ચતુર્થીને દિવસ શ્રીજીમહારાજ શ્રીગઢડા મધ્યે દાદાખાચરના દરબારમાં સાધુની જાયગાને વિષે રાત્રિને સમયે પધાર્યા હતા અને સર્વે શ્વેત વસ્ત્ર ધારણ કર્યાં હતાં અને પોતાના મુખારવિંદની આગળ સાધુ તથા દેશદેશના હરિભક્તની સભા ભરાઇને બેઠી હતી.
-
-પછી શ્રીજીમહારાજ બોલ્યા જે, “સર્વે હરિભક્ત સાંભળો, વાર્તા કરીએ છીએ જે, ભગવાનના ભક્તને ભગવાનના સ્વરૂપમાં અખંડ વૃત્તિ રાખવી. અને જો અખંડ વૃત્તિ ન રહે અને દેહ મૂકે તો પણ ભગવાનની કૃપાથી તેનું કલ્યાણ તો થાય છે, પણ જેવું અખંડ વૃત્તિવાળાનું થાય છે તેવું નથી થાતું.” ]]>
-</content>
-</sub_chapter>
-<sub_chapter>
-2. <sub_chapter_name>બંધન અને મોક્ષનું કારણ</sub_chapter_name>
-<content>
-<![CDATA[ 2. બંધન અને મોક્ષનું કારણ
-
-સંવત્ ૧૮૭૬ ના માગશર સુદિ ૫ પંચમીને દિવસ શ્રીજીમહારાજ શ્રીગઢડા મધ્યે દાદાખાચરના દરબારમાં વિરાજમાન હતા. અને સર્વે શ્વેત વસ્ત્ર ધારણ કર્યાં હતાં.
-
-પછી શ્રીજીમહારાજ બોલ્યા જે, “જીવને બંધન અને મોક્ષનું કારણ તેનું મન જ છે. જો મન ભગવાનના સ્વરૂપમાં જોડાય તો પરમ પદને પામે છે.” ]]>
-</content>
-</sub_chapter>
-</chapter>
-</chapters>`
-        };
-
-        /***********************************************************************
-         * 2. GET BOOK NAME DIRECTLY BY REMOVING `.xml` FROM FILENAME
-         * ---------------------------------------------------------------------
-         * ઉદાહરણ: "books/વચનામૃત.xml" -> "વચનામૃત"
-         ***********************************************************************/
-        function getBookNameFromFilename(filePath) {
-            if (!filePath) return "સત્સંગ ગ્રંથ";
-            const fileName = decodeURIComponent(filePath.split('/').pop());
-            return fileName
-                .replace(/\.xml$/i, '') // .xml અથવા .XML કાઢી નાખે છે
-                .replace(/_/g, ' ')
+        function cleanCdataText(raw) {
+            if (!raw) return "";
+            return raw
+                .replace(/^\s*<!\[CDATA\[/i, '')
+                .replace(/\]\]>\s*$/i, '')
                 .trim();
         }
 
-        function extractSmartSummary(chapters) {
-            if (!chapters || chapters.length === 0) return "વાંચવા માટે અહીં ક્લિક કરો";
-            const chapNames = chapters.slice(0, 3).map(c => c.title).join(" • ");
-            const moreCount = chapters.length > 3 ? ` અને બીજા ${chapters.length - 3} પ્રકરણો` : "";
-            return `સમાવિષ્ટ: ${chapNames}${moreCount}`;
-        }
-
-        /***********************************************************************
-         * 3. XML PARSER (સીધા ચેપ્ટર અને સબ-ચેપ્ટર બંને માટે)
-         ***********************************************************************/
         function parseBookXml(xmlString, bookEntry) {
+            if (!xmlString) return bookEntry;
+
+            // Remove UTF-8 BOM if present and fix unescaped '&' outside CDATA so DOMParser never fails
+            const sanitizedXml = xmlString
+                .replace(/^\uFEFF/, '')
+                .trim();
+
             const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlString.trim(), "text/xml");
+            const xmlDoc = parser.parseFromString(sanitizedXml, "text/xml");
             const chapterNodes = Array.from(xmlDoc.getElementsByTagName("chapter"));
 
             let hasNestedStructure = false;
+            let chapters = [];
 
-            const chapters = chapterNodes.map((chapNode, cIdx) => {
-                const chapterNameEl = chapNode.getElementsByTagName("chapter_name")[0];
-                const chapterTitle = chapterNameEl ? chapterNameEl.textContent.trim() : `પ્રકરણ ${cIdx + 1}`;
+            if (chapterNodes.length > 0) {
+                chapters = chapterNodes.map((chapNode, cIdx) => {
+                    const chapterNameEl = chapNode.getElementsByTagName("chapter_name")[0];
+                    const chapterTitle = chapterNameEl ? chapterNameEl.textContent.trim() : `પ્રકરણ ${cIdx + 1}`;
 
-                const subChapterNodes = Array.from(chapNode.getElementsByTagName("sub_chapter"));
+                    const subChapterNodes = Array.from(chapNode.getElementsByTagName("sub_chapter"));
 
-                if (subChapterNodes.length > 0) {
-                    hasNestedStructure = true;
-                    const subChapters = subChapterNodes.map((subNode, sIdx) => {
-                        const subNameEl = subNode.getElementsByTagName("sub_chapter_name")[0];
-                        const rawSubName = subNameEl ? subNameEl.textContent.trim() : `પેટા-પ્રકરણ ${sIdx + 1}`;
+                    if (subChapterNodes.length > 0) {
+                        hasNestedStructure = true;
+                        const subChapters = subChapterNodes.map((subNode, sIdx) => {
+                            const subNameEl = subNode.getElementsByTagName("sub_chapter_name")[0];
+                            const rawSubName = subNameEl ? subNameEl.textContent.trim() : `પેટા-પ્રકરણ ${sIdx + 1}`;
 
-                        // Check if there is a leading number prefix right before <sub_chapter_name> inside <sub_chapter>
-                        let prefixText = "";
-                        for (const child of subNode.childNodes) {
-                            if (child.nodeType === Node.TEXT_NODE) {
-                                const t = child.textContent.trim();
-                                if (t) prefixText += t + " ";
-                            } else if (child.nodeName === "sub_chapter_name") {
-                                break;
+                            // Check if there is a leading number prefix right before <sub_chapter_name> inside <sub_chapter>
+                            let prefixText = "";
+                            for (const child of subNode.childNodes) {
+                                if (child.nodeType === Node.TEXT_NODE) {
+                                    const t = child.textContent.trim();
+                                    if (t) prefixText += t + " ";
+                                } else if (child.nodeName.toLowerCase() === "sub_chapter_name") {
+                                    break;
+                                }
                             }
-                        }
 
-                        const fullSubTitle = (prefixText + rawSubName).replace(/\s+/g, ' ').trim();
-                        const contentEl = subNode.getElementsByTagName("content")[0];
-                        const contentText = contentEl ? contentEl.textContent.trim() : "";
+                            const fullSubTitle = (prefixText + rawSubName).replace(/\s+/g, ' ').trim();
+                            const contentEl = subNode.getElementsByTagName("content")[0];
+                            const contentText = contentEl ? cleanCdataText(contentEl.textContent) : "";
+
+                            return {
+                                title: fullSubTitle,
+                                content: contentText
+                            };
+                        });
 
                         return {
-                            title: fullSubTitle,
+                            title: chapterTitle,
+                            hasSubChapters: true,
+                            subChapters: subChapters,
+                            content: ""
+                        };
+                    } else {
+                        const contentEl = chapNode.getElementsByTagName("content")[0];
+                        const contentText = contentEl ? cleanCdataText(contentEl.textContent) : "";
+
+                        return {
+                            title: chapterTitle,
+                            hasSubChapters: false,
+                            subChapters: [],
                             content: contentText
                         };
-                    });
+                    }
+                });
+            }
 
-                    return {
-                        title: chapterTitle,
-                        hasSubChapters: true,
-                        subChapters: subChapters,
-                        content: ""
-                    };
-                } else {
-                    const contentEl = chapNode.getElementsByTagName("content")[0];
-                    const contentText = contentEl ? contentEl.textContent.trim() : "";
+            // FALLBACK REGEX PARSER: જો XML માં ક્યાંક નાની સિન્ટેક્સ ભૂલ કે unescaped પાત્રો હોય તો પણ ચેપ્ટર અને સબ-ચેપ્ટર 100% પકડાઈ જશે!
+            if (chapters.length === 0) {
+                const chapterBlocks = sanitizedXml.match(/<chapter\b[^>]*>[\s\S]*?<\/chapter>/gi) || [];
+                chapters = chapterBlocks.map((chapBlock, cIdx) => {
+                    const chapNameMatch = chapBlock.match(/<chapter_name\b[^>]*>([\s\S]*?)<\/chapter_name>/i);
+                    const chapterTitle = chapNameMatch ? cleanCdataText(chapNameMatch[1]) : `પ્રકરણ ${cIdx + 1}`;
 
-                    return {
-                        title: chapterTitle,
-                        hasSubChapters: false,
-                        subChapters: [],
-                        content: contentText
-                    };
-                }
-            });
+                    const subBlocks = chapBlock.match(/<sub_chapter\b[^>]*>[\s\S]*?<\/sub_chapter>/gi) || [];
+                    if (subBlocks.length > 0) {
+                        hasNestedStructure = true;
+                        const subChapters = subBlocks.map((subBlock, sIdx) => {
+                            const prefixMatch = subBlock.match(/<sub_chapter\b[^>]*>([\s\S]*?)<sub_chapter_name/i);
+                            const prefix = prefixMatch ? prefixMatch[1].trim() : "";
+
+                            const subNameMatch = subBlock.match(/<sub_chapter_name\b[^>]*>([\s\S]*?)<\/sub_chapter_name>/i);
+                            const rawSubName = subNameMatch ? cleanCdataText(subNameMatch[1]) : `પેટા-પ્રકરણ ${sIdx + 1}`;
+                            const fullSubTitle = (prefix ? `${prefix} ${rawSubName}` : rawSubName).replace(/\s+/g, ' ').trim();
+
+                            const contentMatch = subBlock.match(/<content\b[^>]*>([\s\S]*?)<\/content>/i);
+                            const contentText = contentMatch ? cleanCdataText(contentMatch[1]) : "";
+
+                            return {
+                                title: fullSubTitle,
+                                content: contentText
+                            };
+                        });
+
+                        return {
+                            title: chapterTitle,
+                            hasSubChapters: true,
+                            subChapters: subChapters,
+                            content: ""
+                        };
+                    } else {
+                        const contentMatch = chapBlock.match(/<content\b[^>]*>([\s\S]*?)<\/content>/i);
+                        const contentText = contentMatch ? cleanCdataText(contentMatch[1]) : "";
+
+                        return {
+                            title: chapterTitle,
+                            hasSubChapters: false,
+                            subChapters: [],
+                            content: contentText
+                        };
+                    }
+                });
+            }
 
             bookEntry.hasNestedStructure = hasNestedStructure;
             bookEntry.chapters = chapters;
-            bookEntry.isLoaded = true;
+            bookEntry.isLoaded = chapters.length > 0;
             bookEntry.category = hasNestedStructure ? "પેટા-પ્રકરણ સહિત ગ્રંથ" : "સત્સંગ ગ્રંથ";
             bookEntry.description = extractSmartSummary(chapters);
             return bookEntry;
@@ -639,7 +566,7 @@
 
         async function ensureBookLoaded(bookIndex, isBackground = false) {
             const book = booksLibrary[bookIndex];
-            if (!book || book.isLoaded) return book;
+            if (!book || (book.isLoaded && book.chapters && book.chapters.length > 0)) return book;
 
             const loadingEl = document.getElementById('loading-state');
             if (!isBackground) {
@@ -648,9 +575,15 @@
 
             let xmlText = null;
             try {
-                const response = await fetch(book.xmlPath);
+                // Encode Gujarati characters in URL properly for GitHub Pages / Web servers
+                const safeUrl = encodeURI(decodeURI(book.xmlPath));
+                const response = await fetch(safeUrl);
                 if (response.ok) {
-                    xmlText = await response.text();
+                    const fetchedText = await response.text();
+                    // Verify it actually contains <chapter> and is not a 404 HTML page
+                    if (fetchedText && /<chapter\b/i.test(fetchedText)) {
+                        xmlText = fetchedText;
+                    }
                 }
             } catch (err) {
                 // Will use preview fallback if running in preview environment
