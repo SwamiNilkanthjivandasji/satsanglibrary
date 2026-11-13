@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#c85a17">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="સત્સંગ પુસ્તકાલય">
     <title>સત્સંગ પુસ્તકાલય - ડિજિટલ ગ્રંથાલય</title>
     
     <!-- Tailwind CSS -->
@@ -155,13 +160,14 @@
                 <div class="truncate">
                     <h1 class="text-base sm:text-xl font-bold tracking-tight theme-text-primary truncate">
                         સત્સંગ પુસ્તકાલય
-                    </h1>
-                    <p class="text-[11px] sm:text-xs theme-text-secondary truncate hidden xs:block">ડિજિટલ આધ્યાત્મિક ગ્રંથો અને વાંચન</p>
-                </div>
-            </div>
+            <!-- Theme & Install Controls (Touch Friendly) -->
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <!-- App Install Button (PWA) -->
+                <button onclick="triggerAppInstall()" id="btn-install-app" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold theme-accent-light theme-accent-text border theme-border hover:opacity-90 active:scale-95 transition touch-manipulation" title="મોબાઈલમાં એપ તરીકે ઇન્સ્ટોલ કરો">
+                    <i data-lucide="download" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    <span>એપ ઇન્સ્ટોલ</span>
+                </button>
 
-            <!-- Theme Controls (Touch Friendly) -->
-            <div class="flex items-center gap-1.5 shrink-0">
                 <div class="flex items-center rounded-xl p-1 theme-bg-secondary border theme-border">
                     <button onclick="setTheme('light')" id="btn-theme-light" class="p-2 sm:p-1.5 rounded-lg text-xs font-medium transition touch-manipulation" title="લાઇટ મોડ (Light)">
                         <i data-lucide="sun" class="w-4 h-4"></i>
@@ -371,6 +377,29 @@
 
     </main>
 
+    <!-- PWA Install Guide Modal (For iOS Safari or when browser prompt needs manual step) -->
+    <div id="install-guide-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 sm:p-4">
+        <div class="theme-bg-card border theme-border rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl theme-accent-bg text-white flex items-center justify-center">
+                        <i data-lucide="smartphone" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-bold theme-text-primary">એપ તરીકે ઇન્સ્ટોલ કરો</h3>
+                </div>
+                <button onclick="closeInstallModal()" class="p-1.5 rounded-xl theme-bg-secondary theme-text-secondary hover:theme-text-primary">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="install-guide-steps" class="text-xs sm:text-sm theme-text-secondary space-y-2.5 leading-relaxed">
+                <!-- Populated dynamically based on Android / iOS / Desktop -->
+            </div>
+            <button onclick="closeInstallModal()" class="w-full py-2.5 rounded-xl theme-accent-bg text-white text-sm font-semibold shadow-sm active:scale-[0.99] transition">
+                સમજાઈ ગયું
+            </button>
+        </div>
+    </div>
+
     <!-- MOBILE FIXED BOTTOM READER BAR (Shown only on mobile when reading) -->
     <div id="mobile-reader-bar" class="hidden sm:hidden fixed bottom-0 left-0 right-0 z-40 theme-bg-card border-t theme-border shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-3 py-2">
         <div class="flex items-center justify-between gap-2">
@@ -469,6 +498,7 @@
         };
 
         let booksLibrary = [];
+        let deferredInstallPrompt = null;
         let appState = {
             view: 'books',
             selectedBookIndex: null,
@@ -479,10 +509,106 @@
             isSerifFont: true
         };
 
-        function getBookNameFromFilename(xmlPath) {
-            if (!xmlPath) return "પુસ્તક";
-            const fileName = xmlPath.split('/').pop();
-            return decodeURIComponent(fileName).replace(/\.xml$/i, '').trim();
+        /***********************************************************************
+         * PWA SETUP (Dynamic Manifest + Service Worker for App Installation)
+         ***********************************************************************/
+        function setupPWA() {
+            // 1. Dynamic SVG App Icon & Web App Manifest
+            const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#c85a17"/><path d="M144 136h96c26.5 0 48 21.5 48 48v192c0-17.7-14.3-32-32-32H144V136zm224 0h-96c-26.5 0-48 21.5-48 48v192c0-17.7 14.3-32 32-32h112V136z" fill="#ffffff"/></svg>`;
+            const iconUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgIcon)}`;
+
+            const appleTouchLink = document.createElement('link');
+            appleTouchLink.rel = 'apple-touch-icon';
+            appleTouchLink.href = iconUrl;
+            document.head.appendChild(appleTouchLink);
+
+            const manifestData = {
+                name: "સત્સંગ પુસ્તકાલય",
+                short_name: "સત્સંગ પુસ્તક",
+                description: "ડિજિટલ આધ્યાત્મિક ગ્રંથો અને વાંચન",
+                start_url: window.location.href,
+                display: "standalone",
+                background_color: "#fdf8f2",
+                theme_color: "#c85a17",
+                icons: [
+                    { src: iconUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+                    { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+                ]
+            };
+
+            const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = URL.createObjectURL(manifestBlob);
+            document.head.appendChild(manifestLink);
+
+            // 2. Register lightweight Service Worker (required by Chrome/Android for install prompt)
+            if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => self.clients.claim());
+                    self.addEventListener('fetch', (e) => {});
+                `;
+                const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+            }
+
+            // 3. Listen for native browser install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                const installBtn = document.getElementById('btn-install-app');
+                if (installBtn) installBtn.classList.remove('hidden');
+            });
+
+            window.addEventListener('appinstalled', () => {
+                deferredInstallPrompt = null;
+                const installBtn = document.getElementById('btn-install-app');
+                if (installBtn) installBtn.classList.add('hidden');
+                showToast('સત્સંગ પુસ્તકાલય એપ તમારા ફોનમાં ઇન્સ્ટોલ થઈ ગઈ છે!');
+            });
+
+            // Hide install button if already opened as an installed standalone app
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                const installBtn = document.getElementById('btn-install-app');
+                if (installBtn) installBtn.classList.add('hidden');
+            }
+        }
+
+        async function triggerAppInstall() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredInstallPrompt = null;
+                }
+                return;
+            }
+
+            // Show clear step-by-step instructions if native prompt isn't triggered directly (e.g., iOS Safari or preview mode)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const stepsEl = document.getElementById('install-guide-steps');
+            if (isIOS) {
+                stepsEl.innerHTML = `
+                    <p class="font-semibold theme-text-primary">iPhone / iPad માં ઇન્સ્ટોલ કરવાની રીત:</p>
+                    <p>૧. Safari બ્રાઉઝરમાં નીચે આપેલા <strong>Share (શેર)</strong> બટન પર ક્લિક કરો.</p>
+                    <p>૨. નીચે સ્ક્રોલ કરીને <strong>"Add to Home Screen"</strong> પસંદ કરો.</p>
+                    <p>૩. ઉપર જમણી બાજુ <strong>"Add"</strong> પર ક્લિક કરો.</p>
+                `;
+            } else {
+                stepsEl.innerHTML = `
+                    <p class="font-semibold theme-text-primary">Android / Chrome માં ઇન્સ્ટોલ કરવાની રીત:</p>
+                    <p>૧. બ્રાઉઝરના ઉપર જમણી બાજુના <strong>ત્રણ ટપકાં (⋮ Menu)</strong> પર ક્લિક કરો.</p>
+                    <p>૨. <strong>"Add to Home screen"</strong> અથવા <strong>"Install app"</strong> પર ક્લિક કરો.</p>
+                    <p>૩. ત્યારબાદ <strong>"Install"</strong> દબાવતા જ એપ તમારા ફોનમાં આવી જશે.</p>
+                `;
+            }
+            document.getElementById('install-guide-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeInstallModal() {
+            document.getElementById('install-guide-modal').classList.add('hidden');
         }
 
         function extractSmartSummary(chapters) {
@@ -634,8 +760,17 @@
          * 3. જ્યારે યુઝર બુક પર ક્લિક કરે ત્યારે (અથવા બેકગ્રાઉન્ડમાં) XML લોડ કરી લે છે.
          ***********************************************************************/
         async function initApp() {
+            setupPWA();
             setTheme('sepia');
             lucide.createIcons();
+
+            // Set initial browser history state so Back button works smoothly inside the app
+            history.replaceState({
+                view: 'books',
+                selectedBookIndex: null,
+                selectedChapterIndex: null,
+                selectedSubChapterIndex: null
+            }, '');
 
             let filePaths = [...BOOK_FILES];
 
@@ -741,14 +876,62 @@
         }
 
         /***********************************************************************
-         * 5. NAVIGATION & VIEW CONTROLLERS
+         * 5. NAVIGATION, BROWSER BACK HISTORY & VIEW CONTROLLERS
          ***********************************************************************/
+        function pushNavigationHistory() {
+            history.pushState({
+                view: appState.view,
+                selectedBookIndex: appState.selectedBookIndex,
+                selectedChapterIndex: appState.selectedChapterIndex,
+                selectedSubChapterIndex: appState.selectedSubChapterIndex
+            }, '');
+        }
+
+        // Handle Device / Browser Back Button cleanly step-by-step
+        window.addEventListener('popstate', async (event) => {
+            if (event.state && event.state.view) {
+                const st = event.state;
+                if (st.selectedBookIndex !== null && booksLibrary[st.selectedBookIndex]) {
+                    await ensureBookLoaded(st.selectedBookIndex, false);
+                }
+                appState.view = st.view;
+                appState.selectedBookIndex = st.selectedBookIndex;
+                appState.selectedChapterIndex = st.selectedChapterIndex;
+                appState.selectedSubChapterIndex = st.selectedSubChapterIndex;
+                clearSearch(false);
+                renderApp();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // Fallback hierarchical back logic if history stack was empty
+                if (appState.view === 'reader') {
+                    const book = booksLibrary[appState.selectedBookIndex];
+                    const chapter = book?.chapters[appState.selectedChapterIndex];
+                    appState.view = (chapter && chapter.hasSubChapters) ? 'subchapters' : 'chapters';
+                    appState.selectedSubChapterIndex = null;
+                    renderApp();
+                } else if (appState.view === 'subchapters') {
+                    appState.view = 'chapters';
+                    appState.selectedChapterIndex = null;
+                    appState.selectedSubChapterIndex = null;
+                    renderApp();
+                } else if (appState.view === 'chapters') {
+                    appState.view = 'books';
+                    appState.selectedBookIndex = null;
+                    appState.selectedChapterIndex = null;
+                    appState.selectedSubChapterIndex = null;
+                    renderApp();
+                }
+            }
+        });
+
         function navigateToHome() {
+            if (appState.view === 'books') return;
             appState.view = 'books';
             appState.selectedBookIndex = null;
             appState.selectedChapterIndex = null;
             appState.selectedSubChapterIndex = null;
             clearSearch(false);
+            pushNavigationHistory();
             renderApp();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -760,6 +943,7 @@
             appState.selectedSubChapterIndex = null;
             appState.view = 'chapters';
             clearSearch(false);
+            pushNavigationHistory();
             renderApp();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -781,39 +965,64 @@
                 appState.view = 'reader';
             }
 
+            pushNavigationHistory();
             renderApp();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function selectSubChapter(subChapterIndex) {
+        function selectSubChapter(subChapterIndex, replaceHistory = false) {
             appState.selectedSubChapterIndex = subChapterIndex;
             appState.view = 'reader';
             clearSearch(false);
-            renderApp();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function navigateBackToChapters() {
-            appState.selectedSubChapterIndex = null;
-            appState.view = 'chapters';
-            clearSearch(false);
-            renderApp();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function handleReaderBack() {
-            const book = booksLibrary[appState.selectedBookIndex];
-            const chapter = book.chapters[appState.selectedChapterIndex];
-            if (chapter && chapter.hasSubChapters) {
-                appState.view = 'subchapters';
+            if (replaceHistory) {
+                history.replaceState({
+                    view: appState.view,
+                    selectedBookIndex: appState.selectedBookIndex,
+                    selectedChapterIndex: appState.selectedChapterIndex,
+                    selectedSubChapterIndex: appState.selectedSubChapterIndex
+                }, '');
             } else {
-                appState.view = 'chapters';
+                pushNavigationHistory();
             }
             renderApp();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Next / Previous item navigation in Reader View
+        function navigateBackToChapters() {
+            if (history.state && history.state.view === 'subchapters') {
+                history.back();
+                return;
+            }
+            appState.selectedChapterIndex = null;
+            appState.selectedSubChapterIndex = null;
+            appState.view = 'chapters';
+            clearSearch(false);
+            pushNavigationHistory();
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleReaderBack() {
+            if (history.state && history.state.view === 'reader') {
+                history.back();
+                return;
+            }
+            const book = booksLibrary[appState.selectedBookIndex];
+            const chapter = book?.chapters[appState.selectedChapterIndex];
+            if (chapter && chapter.hasSubChapters) {
+                appState.selectedSubChapterIndex = null;
+                appState.view = 'subchapters';
+            } else {
+                appState.selectedChapterIndex = null;
+                appState.selectedSubChapterIndex = null;
+                appState.view = 'chapters';
+            }
+            pushNavigationHistory();
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Next / Previous item navigation in Reader View (replaces current reader history entry so Back always returns to list!)
         function navigateAdjacentItem(direction) {
             const book = booksLibrary[appState.selectedBookIndex];
             const chapter = book.chapters[appState.selectedChapterIndex];
@@ -821,12 +1030,23 @@
             if (chapter.hasSubChapters) {
                 const nextSubIdx = appState.selectedSubChapterIndex + direction;
                 if (nextSubIdx >= 0 && nextSubIdx < chapter.subChapters.length) {
-                    selectSubChapter(nextSubIdx);
+                    selectSubChapter(nextSubIdx, true);
                 }
             } else {
                 const nextChapIdx = appState.selectedChapterIndex + direction;
                 if (nextChapIdx >= 0 && nextChapIdx < book.chapters.length) {
-                    selectChapter(nextChapIdx);
+                    const nextChap = book.chapters[nextChapIdx];
+                    appState.selectedChapterIndex = nextChapIdx;
+                    appState.selectedSubChapterIndex = null;
+                    appState.view = (nextChap.hasSubChapters && nextChap.subChapters.length > 0) ? 'subchapters' : 'reader';
+                    history.replaceState({
+                        view: appState.view,
+                        selectedBookIndex: appState.selectedBookIndex,
+                        selectedChapterIndex: appState.selectedChapterIndex,
+                        selectedSubChapterIndex: appState.selectedSubChapterIndex
+                    }, '');
+                    renderApp();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }
         }
