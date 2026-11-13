@@ -359,19 +359,24 @@
     <!-- Application Logic -->
     <script>
         /***********************************************************************
-         * 1. BOOKS FOLDER CONFIGURATION (તમારા GitHub ના `books/` ફોલ્ડરનું સેટઅપ)
+         * 1. BOOKS CONFIGURATION (સૌથી સરળ અને સુપર-ફાસ્ટ સેટઅપ)
          * ---------------------------------------------------------------------
-         * હવે તમારે બુકના નામ (Title) જાતે લખવાની જરૂર નથી! 
-         * એપ આપોઆપ XML ની અંદરથી અથવા ફાઇલના નામ પરથી બુકનું નામ શોધી લેશે.
-         * 
-         * વિકલ્પ A (સૌથી સરળ - 100% ઓટોમેટિક): 
-         * નીચે `GITHUB_CONFIG` માં ફક્ત તમારું GitHub `username` અને `repo` લખી દો.
-         * તમે `books/` ફોલ્ડરમાં જેટલી પણ .xml ફાઇલ મૂકશો તે બધી આપોઆપ આવી જશે!
-         * 
-         * વિકલ્પ B (ફાઇલ લિસ્ટ): 
-         * નીચે `BOOK_FILES` માં ફક્ત ફાઇલનો પાથ લખો, બુકનું નામ XML માંથી આપોઆપ આવી જશે.
+         * તમારે ફક્ત એટલું જ કરવાનું છે:
+         * 1. `books/` ફોલ્ડરમાં તમારી XML ફાઇલો મૂકો (ફાઇલનું નામ જ બુકનું નામ રાખો).
+         *    એપ આપોઆપ ફાઇલના નામમાંથી `.xml` કાઢીને બુકનું નામ બતાવી દેશે!
+         * 2. તમે નીચે `BOOK_FILES` માં ફાઇલના નામ લખી શકો છો, અથવા `books/books.json`
+         *    નામની અલગ ફાઇલ બનાવીને તેમાં લિસ્ટ મૂકી શકો છો.
          ***********************************************************************/
         
+        const BOOK_FILES = [
+            "books/મહિમા સાથે નિશ્ચય શા માટે.xml",
+            "books/વચનામૃત.xml"
+            // અહીં અથવા books/books.json માં તમારા બીજા પુસ્તકોના ફાઇલ નામ ઉમેરો:
+            // "books/ભક્તચિંતામણી.xml",
+            // "books/શિક્ષાપત્રી.xml"
+        ];
+
+        // Optional: જો તમારે ફાઇલના નામ પણ ન લખવા હોય તો માત્ર GitHub username અને repo લખી દો
         const GITHUB_CONFIG = {
             username: "", // દા.ત. "your-github-username"
             repo: "",     // દા.ત. "satsang-books"
@@ -379,21 +384,26 @@
             folder: "books"
         };
 
-        // ફક્ત XML ફાઇલના નામ/પાથ (બુકનું નામ XML માંથી ઓટોમેટિક શોધાઈ જશે!)
-        const BOOK_FILES = [
-            "books/અક્ષરાનંદ_સ્વામીની_વાતો.xml",
-            "books/પરચા_પ્રકરણ.xml"
-            // ભવિષ્યમાં ફક્ત ફાઇલનું નામ ઉમેરો, દા.ત.:
-            // "books/bhaktachintamani.xml",
-            // "books/શિક્ષાપત્રી.xml"
-        ];
+        /***********************************************************************
+         * APPLICATION STATE (આ વેરિએબલથી આખી એપ કંટ્રોલ થાય છે)
+         ***********************************************************************/
+        let booksLibrary = [];
+        const appState = {
+            view: 'books', // 'books' | 'chapters' | 'subchapters' | 'reader'
+            selectedBookIndex: null,
+            selectedChapterIndex: null,
+            selectedSubChapterIndex: null,
+            searchQuery: '',
+            fontSize: 20,
+            isSerifFont: true
+        };
 
         /***********************************************************************
          * FALLBACK SAMPLE XML DATA (ફક્ત અહીં પ્રિવ્યૂ ચલાવવા માટે, જ્યારે GitHub પર
          * `books/` ફોલ્ડર હાજર હશે ત્યારે સીધી તમારી જ XML ફાઇલ લોડ થશે)
          ***********************************************************************/
         const PREVIEW_FALLBACK_XML = {
-            "books/mahima.xml": `
+            "books/મહિમા સાથે નિશ્ચય શા માટે.xml": `
 <chapters>
 <chapter>
 <chapter_name>મહિમા સાથે નિશ્ચય શા માટે ?</chapter_name>
@@ -421,7 +431,7 @@
 </chapter>
 </chapters>`,
 
-            "books/vachanamrut.xml": `
+            "books/વચનામૃત.xml": `
 <chapters>
 <chapter>
 <chapter_name>પરથારો</chapter_name>
@@ -466,75 +476,30 @@
         };
 
         /***********************************************************************
-         * 3. SMART XML PARSER & AUTO BOOK-NAME DETECTOR
+         * 2. GET BOOK NAME DIRECTLY BY REMOVING `.xml` FROM FILENAME
          * ---------------------------------------------------------------------
-         * બુકનું નામ શોધવાનો ઓટોમેટિક ક્રમ (Priority):
-         * 1. જો XML માં <book_name> અથવા <title> ટેગ હોય તો તેમાંથી લેશે.
-         * 2. જો XML ફાઇલનું નામ ગુજરાતીમાં હોય (દા.ત. "વચનામૃત.xml") તો તે લેશે.
-         * 3. જો બુકમાં 1 કે 2 જ પ્રકરણ હોય તો પહેલા <chapter_name> નું નામ બુકને આપશે.
-         * 4. જો મોટો ગ્રંથ હોય (જેમ કે વચનામૃત - જેમાં અંદરના લખાણમાં ગ્રંથનું નામ કે 
-         *    પ્રથમ ચેપ્ટર હોય) તો તેમાંથી સ્માર્ટ રીતે નામ શોધી કાઢશે!
+         * ઉદાહરણ: "books/વચનામૃત.xml" -> "વચનામૃત"
          ***********************************************************************/
-        function extractSmartBookTitle(xmlDoc, chapters, xmlPath, manualTitle) {
-            if (manualTitle && manualTitle.trim() !== "") {
-                return manualTitle.trim();
-            }
-
-            // 1. Check root attribute: <chapters book_name="..." title="...">
-            const rootEl = xmlDoc.documentElement;
-            if (rootEl) {
-                const attrTitle = rootEl.getAttribute("book_name") || rootEl.getAttribute("title") || rootEl.getAttribute("name");
-                if (attrTitle && attrTitle.trim()) return attrTitle.trim();
-            }
-
-            // 2. Check explicit <book_name> or <book_title> tag inside XML
-            const bookNameTag = xmlDoc.getElementsByTagName("book_name")[0] || xmlDoc.getElementsByTagName("book_title")[0];
-            if (bookNameTag && bookNameTag.textContent.trim()) {
-                return bookNameTag.textContent.trim();
-            }
-
-            // 3. Check if filename itself is in Gujarati script (e.g., books/વચનામૃત.xml)
-            const rawFileName = decodeURIComponent((xmlPath || "").split('/').pop().replace(/\.xml$/i, '')).replace(/[-_]/g, ' ').trim();
-            const hasGujaratiChars = /[\u0A80-\u0AFF]/.test(rawFileName);
-            if (hasGujaratiChars) {
-                return rawFileName;
-            }
-
-            // 4. Smart detection from XML content & chapters
-            if (chapters.length > 0) {
-                const firstChapTitle = chapters[0].title;
-                const firstContent = chapters[0].hasSubChapters 
-                    ? (chapters[0].subChapters[0]?.content || "") 
-                    : (chapters[0].content || "");
-
-                // જો પહેલા ચેપ્ટરનું નામ "પરથારો" કે "પ્રસ્તાવના" જેવું હોય, તો કન્ટેન્ટ કે બીજા ચેપ્ટર પરથી ગ્રંથનું નામ શોધો
-                const genericFirstChapters = ["પરથારો", "પ્રસ્તાવના", "અનુક્રમણિકા", "નિવેદન", "મંગલાચરણ"];
-                if (genericFirstChapters.includes(firstChapTitle)) {
-                    if (firstContent.includes("વચનામૃત")) {
-                        return "વચનામૃત";
-                    }
-                    if (chapters.length > 1) {
-                        return `${chapters[1].title} (${firstChapTitle})`;
-                    }
-                }
-
-                // ડિફોલ્ટ: પહેલા <chapter_name> નું નામ જ બુકના નામ તરીકે લઇ લો
-                return firstChapTitle;
-            }
-
-            return rawFileName || "સત્સંગ ગ્રંથ";
+        function getBookNameFromFilename(filePath) {
+            if (!filePath) return "સત્સંગ ગ્રંથ";
+            const fileName = decodeURIComponent(filePath.split('/').pop());
+            return fileName
+                .replace(/\.xml$/i, '') // .xml અથવા .XML કાઢી નાખે છે
+                .replace(/_/g, ' ')
+                .trim();
         }
 
         function extractSmartSummary(chapters) {
-            if (!chapters || chapters.length === 0) return "આધ્યાત્મિક સત્સંગ ગ્રંથ";
-            
-            // Show preview of chapter names as book subtitle
+            if (!chapters || chapters.length === 0) return "વાંચવા માટે અહીં ક્લિક કરો";
             const chapNames = chapters.slice(0, 3).map(c => c.title).join(" • ");
             const moreCount = chapters.length > 3 ? ` અને બીજા ${chapters.length - 3} પ્રકરણો` : "";
             return `સમાવિષ્ટ: ${chapNames}${moreCount}`;
         }
 
-        function parseBookXml(xmlString, bookMeta = {}) {
+        /***********************************************************************
+         * 3. XML PARSER (સીધા ચેપ્ટર અને સબ-ચેપ્ટર બંને માટે)
+         ***********************************************************************/
+        function parseBookXml(xmlString, bookEntry) {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlString.trim(), "text/xml");
             const chapterNodes = Array.from(xmlDoc.getElementsByTagName("chapter"));
@@ -553,7 +518,7 @@
                         const subNameEl = subNode.getElementsByTagName("sub_chapter_name")[0];
                         const rawSubName = subNameEl ? subNameEl.textContent.trim() : `પેટા-પ્રકરણ ${sIdx + 1}`;
 
-                        // Also check if there is a leading number prefix right before <sub_chapter_name> inside <sub_chapter>
+                        // Check if there is a leading number prefix right before <sub_chapter_name> inside <sub_chapter>
                         let prefixText = "";
                         for (const child of subNode.childNodes) {
                             if (child.nodeType === Node.TEXT_NODE) {
@@ -593,39 +558,46 @@
                 }
             });
 
-            const autoBookTitle = extractSmartBookTitle(xmlDoc, chapters, bookMeta.xmlPath, bookMeta.title);
-            const autoCategory = bookMeta.category || (hasNestedStructure ? "શ્રીજી મહારાજના ગ્રંથો (પેટા-પ્રકરણ સહિત)" : "સત્સંગ કથા અને પ્રકરણો");
-            const autoDescription = bookMeta.description || extractSmartSummary(chapters);
-
-            return {
-                id: bookMeta.id || `book-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                title: autoBookTitle,
-                category: autoCategory,
-                description: autoDescription,
-                xmlPath: bookMeta.xmlPath || "",
-                hasNestedStructure: hasNestedStructure,
-                chapters: chapters
-            };
+            bookEntry.hasNestedStructure = hasNestedStructure;
+            bookEntry.chapters = chapters;
+            bookEntry.isLoaded = true;
+            bookEntry.category = hasNestedStructure ? "પેટા-પ્રકરણ સહિત ગ્રંથ" : "સત્સંગ ગ્રંથ";
+            bookEntry.description = extractSmartSummary(chapters);
+            return bookEntry;
         }
 
         /***********************************************************************
-         * 4. FAST PARALLEL LOADING FROM `books/` FOLDER
+         * 4. INSTANT INITIALIZATION & ON-DEMAND XML LOADER
+         * ---------------------------------------------------------------------
+         * 1. પહેલા ફાઇલના નામમાંથી `.xml` હટાવીને તરત જ (0.1 સેકન્ડમાં) બુકનું લિસ્ટ બતાવી દે છે!
+         * 2. જો તમે `books/books.json` મૂકી હશે તો તેમાંથી પણ લિસ્ટ લઇ લેશે.
+         * 3. જ્યારે યુઝર બુક પર ક્લિક કરે ત્યારે (અથવા બેકગ્રાઉન્ડમાં) XML લોડ કરી લે છે.
          ***********************************************************************/
         async function initApp() {
             setTheme('sepia');
-            const loadingEl = document.getElementById('loading-state');
-            const booksViewEl = document.getElementById('view-books');
-
-            loadingEl.classList.remove('hidden');
-            booksViewEl.classList.add('hidden');
             lucide.createIcons();
 
-            // Convert simple file paths or objects into normalized list
-            let bookManifestList = BOOK_FILES.map((item, idx) => 
-                typeof item === 'string' ? { id: `book-${idx}`, xmlPath: item } : item
-            );
+            let filePaths = [...BOOK_FILES];
 
-            // 1. Optional: If GITHUB_CONFIG has username & repo, auto-discover all .xml files in `books/` folder via GitHub API
+            // 1. Check if optional `books/books.json` exists
+            try {
+                const jsonResp = await fetch('books/books.json', { cache: 'no-cache' });
+                if (jsonResp.ok) {
+                    const jsonList = await jsonResp.json();
+                    if (Array.isArray(jsonList) && jsonList.length > 0) {
+                        filePaths = jsonList.map(item => {
+                            if (typeof item === 'string') {
+                                return item.startsWith('books/') ? item : `books/${item}`;
+                            }
+                            return item;
+                        });
+                    }
+                }
+            } catch (e) {
+                // Ignore if books/books.json is not used
+            }
+
+            // 2. Check if GitHub username/repo is configured for auto-reading `books/` folder
             if (GITHUB_CONFIG.username && GITHUB_CONFIG.repo) {
                 try {
                     const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.folder}?ref=${GITHUB_CONFIG.branch || 'main'}`;
@@ -634,45 +606,72 @@
                         const files = await ghResp.json();
                         const xmlFiles = files.filter(f => f.name && f.name.toLowerCase().endsWith('.xml'));
                         if (xmlFiles.length > 0) {
-                            bookManifestList = xmlFiles.map((file, idx) => ({
-                                id: `gh-book-${idx}`,
-                                xmlPath: `${GITHUB_CONFIG.folder}/${file.name}`
-                            }));
+                            filePaths = xmlFiles.map(f => `${GITHUB_CONFIG.folder}/${f.name}`);
                         }
                     }
                 } catch (err) {
-                    console.warn("GitHub API auto-discovery skipped:", err);
+                    console.warn("GitHub API check skipped:", err);
                 }
             }
 
-            // 2. FAST PARALLEL FETCH (`Promise.all`) - બધી XML ફાઇલો એકસાથે સમાંતર (Parallel) સ્પીડમાં લોડ થશે!
-            const fetchPromises = bookManifestList.map(async (bookMeta) => {
-                let xmlText = null;
-
-                try {
-                    const response = await fetch(bookMeta.xmlPath, { cache: 'default' });
-                    if (response.ok) {
-                        xmlText = await response.text();
-                    }
-                } catch (fetchErr) {
-                    // Fallback to preview XML if local file isn't hosted yet
-                }
-
-                if (!xmlText && PREVIEW_FALLBACK_XML[bookMeta.xmlPath]) {
-                    xmlText = PREVIEW_FALLBACK_XML[bookMeta.xmlPath];
-                }
-
-                if (xmlText) {
-                    return parseBookXml(xmlText, bookMeta);
-                }
-                return null;
+            // 3. Build instant book list purely from filenames (removing .xml) -> ZERO WAIT TIME!
+            booksLibrary = filePaths.map((item, idx) => {
+                const xmlPath = typeof item === 'string' ? item : item.xmlPath;
+                const bookTitle = (typeof item === 'object' && item.title) ? item.title : getBookNameFromFilename(xmlPath);
+                return {
+                    id: `book-${idx}`,
+                    title: bookTitle,
+                    category: "આધ્યાત્મિક ગ્રંથ",
+                    description: "અનુક્રમણિકા અને પ્રકરણો વાંચવા માટે ક્લિક કરો",
+                    xmlPath: xmlPath,
+                    isLoaded: false,
+                    hasNestedStructure: false,
+                    chapters: []
+                };
             });
 
-            const results = await Promise.all(fetchPromises);
-            booksLibrary = results.filter(Boolean);
-
-            loadingEl.classList.add('hidden');
+            // Render books grid immediately so user sees books in 0.1s!
             renderApp();
+
+            // 4. Preload XML files quietly in the background so clicking is also instant
+            booksLibrary.forEach((_, idx) => ensureBookLoaded(idx, true));
+        }
+
+        async function ensureBookLoaded(bookIndex, isBackground = false) {
+            const book = booksLibrary[bookIndex];
+            if (!book || book.isLoaded) return book;
+
+            const loadingEl = document.getElementById('loading-state');
+            if (!isBackground) {
+                loadingEl.classList.remove('hidden');
+            }
+
+            let xmlText = null;
+            try {
+                const response = await fetch(book.xmlPath);
+                if (response.ok) {
+                    xmlText = await response.text();
+                }
+            } catch (err) {
+                // Will use preview fallback if running in preview environment
+            }
+
+            if (!xmlText && PREVIEW_FALLBACK_XML[book.xmlPath]) {
+                xmlText = PREVIEW_FALLBACK_XML[book.xmlPath];
+            }
+
+            if (xmlText) {
+                parseBookXml(xmlText, book);
+                if (isBackground && appState.view === 'books') {
+                    renderBooksView();
+                    lucide.createIcons();
+                }
+            }
+
+            if (!isBackground) {
+                loadingEl.classList.add('hidden');
+            }
+            return book;
         }
 
         /***********************************************************************
@@ -688,7 +687,8 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function selectBook(bookIndex) {
+        async function selectBook(bookIndex) {
+            await ensureBookLoaded(bookIndex, false);
             appState.selectedBookIndex = bookIndex;
             appState.selectedChapterIndex = null;
             appState.selectedSubChapterIndex = null;
@@ -860,9 +860,11 @@
 
             grid.innerHTML = filteredBooks.map(({ book, index }) => {
                 const totalSubChapters = book.chapters.reduce((sum, c) => sum + (c.subChapters ? c.subChapters.length : 0), 0);
-                const structureLabel = book.hasNestedStructure 
-                    ? `${book.chapters.length} પ્રકરણ • ${totalSubChapters} પેટા-પ્રકરણ`
-                    : `${book.chapters.length} પ્રકરણો`;
+                const structureLabel = !book.isLoaded 
+                    ? `વાંચવા માટે ક્લિક કરો`
+                    : (book.hasNestedStructure 
+                        ? `${book.chapters.length} પ્રકરણ • ${totalSubChapters} પેટા-પ્રકરણ`
+                        : `${book.chapters.length} પ્રકરણો`);
 
                 return `
                     <div onclick="selectBook(${index})" class="group cursor-pointer rounded-2xl theme-bg-card border theme-border p-5 shadow-sm hover:shadow-md hover:border-amber-500 transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
