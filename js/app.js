@@ -8,6 +8,34 @@ import { initPwa } from './pwa.js';
 const $ = (sel) => document.querySelector(sel);
 const viewEl = $('#view');
 
+/* ---------- છેલ્લે વાંચેલી જગ્યા (આ ઉપકરણ પૂરતી, localStorage) ---------- */
+const LAST_KEY = 'sp.last';
+function readLast() {
+  try {
+    return JSON.parse(storage.get(LAST_KEY, '') || 'null');
+  } catch (_) {
+    return null;
+  }
+}
+const writeLast = (rec) => storage.set(LAST_KEY, JSON.stringify(rec));
+const scrollRatio = () => {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  return max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+};
+function saveScroll() {
+  if (!document.body.classList.contains('has-reader-bar')) return;
+  const rec = readLast();
+  if (!rec) return;
+  rec.r = scrollRatio();
+  writeLast(rec);
+}
+let scrollTimer = null;
+window.addEventListener('scroll', () => {
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(saveScroll, 300);
+}, { passive: true });
+window.addEventListener('pagehide', saveScroll);
+
 const state = {
   books: [],
   listState: 'loading', // loading | ready | error
@@ -52,12 +80,14 @@ function parseRoute() {
   }
   const int = (v) => (v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
   if (seg[0] === 'b' && seg[1]) {
-    return { name: 'book', key: seg[1], c: int(seg[2]), s: int(seg[3]), p: new URLSearchParams(qs || '').get('p') };
+    const q = new URLSearchParams(qs || '');
+    return { name: 'book', key: seg[1], c: int(seg[2]), s: int(seg[3]), p: q.get('p'), resume: q.get('resume') === '1' };
   }
   return { name: 'home' };
 }
 
 let lastRouteSig = '';
+let lastReaderKey = '';
 
 function render({ scroll = true } = {}) {
   const route = parseRoute();
@@ -69,9 +99,10 @@ function render({ scroll = true } = {}) {
   let readerOpen = false;
   let searchVisible = true;
   let pending = false;
+  let readerTitle = '';
 
   if (route.name === 'home') {
-    html = ui.booksView({ books: state.books, listState: state.listState, query: state.query });
+    html = ui.booksView({ books: state.books, listState: state.listState, query: state.query, last: readLast() });
   } else if (state.listState === 'loading') {
     html = ui.bookPendingView({ title: 'પુસ્તકાલય', status: 'loading', file: '' });
     pending = true;
@@ -100,6 +131,7 @@ function render({ scroll = true } = {}) {
           const reader = ui.readerView({ book, chapterIndex, subIndex, prefs: state.prefs });
           html = reader.html;
           title = `${reader.title} • ${book.title}`;
+          readerTitle = reader.title;
           readerOpen = true;
           searchVisible = false;
         }
@@ -127,6 +159,19 @@ function render({ scroll = true } = {}) {
     viewEl.focus({ preventScroll: true });
   }
   lastRouteSig = sig;
+
+  // છેલ્લે વાંચેલી જગ્યા સાચવો. "આગળ વાંચો" થી આવ્યા હોઈએ તો સ્ક્રોલ સ્થાન પણ પાછું લાવો.
+  const readerKey = readerOpen ? `${book.key}/${chapterIndex}/${subIndex}` : '';
+  if (readerOpen && readerKey !== lastReaderKey) {
+    const prev = readLast();
+    const same = prev && prev.key === book.key && prev.c === chapterIndex && prev.s === subIndex;
+    const r = same && route.resume ? prev.r || 0 : 0; // સામાન્ય રીતે ખોલ્યું હોય તો ટોચથી શરૂ
+    writeLast({ key: book.key, c: chapterIndex, s: subIndex, bookTitle: book.title, title: readerTitle, r, t: Date.now() });
+    if (route.resume && same && r > 0.01 && !route.p) {
+      requestAnimationFrame(() => window.scrollTo(0, r * (document.documentElement.scrollHeight - window.innerHeight)));
+    }
+  }
+  lastReaderKey = readerKey;
 
   // ફકરાની id પર સીધી લિંક: #/b/…/c/s?p=<id>
   if (readerOpen && route.p) {

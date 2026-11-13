@@ -2,10 +2,11 @@
  *  - એપની ફાઇલો (HTML/CSS/JS/આઇકન): network-first (ઓનલાઇન હોય તો હંમેશા નવી), ઓફલાઇન તો સેવ કરેલી.
  *  - books/books.json: network-first, ઓફલાઇન તો સેવ કરેલી.
  *  - books/*.xml: અહીં સંભાળતા નથી. તે એપ પોતે IndexedDB માં સેવ કરે છે અને અપડેટ ચકાસે છે.
- *  - Google Fonts: stale-while-revalidate (ઓફલાઇન પણ ફોન્ટ મળે).
+ *  - Google Fonts અને fonts/ ફોલ્ડરની ફાઇલ: stale-while-revalidate (ઓફલાઇન પણ ફોન્ટ મળે).
+ *    fonts/ ફાઇલ PRECACHE માં નથી મૂકી: ફાઇલ ન હોય તો આખું install નિષ્ફળ ન જાય તે માટે.
  * CACHE_VERSION બદલવાથી જૂની cache સાફ થાય. ફાઇલ યાદી બદલાય તો PRECACHE પણ સુધારવી.
  */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const SHELL_CACHE = `satsang-shell-${CACHE_VERSION}`;
 const FONT_CACHE = `satsang-fonts-${CACHE_VERSION}`;
 const NETWORK_TIMEOUT_MS = 4000;
@@ -112,6 +113,10 @@ self.addEventListener('fetch', (event) => {
 
   const path = decodeURIComponent(url.pathname);
   if (/\/books\/[^/]+\.xml$/i.test(path)) return; // XML: એપ પોતે સંભાળે છે
+  if (/\/fonts\/[^/]+\.(ttf|otf|woff2?)$/i.test(path)) {
+    event.respondWith(staleWhileRevalidate(request, FONT_CACHE));
+    return;
+  }
 
   // એપની ફાઇલો, નેવિગેશન અને books.json
   event.respondWith(networkFirst(request, SHELL_CACHE));

@@ -53,7 +53,21 @@ export function bookCard(book) {
     </article>`;
 }
 
-export function booksView({ books, listState, query }) {
+function resumeBanner(last, books) {
+  if (!last || !books.some((b) => b.key === last.key)) return '';
+  const to = `${href(last.key, last.c, last.s)}?resume=1`;
+  return `
+    <a class="resume" href="${to}">
+      <span class="resume__icon">${icon('book-open')}</span>
+      <span class="resume__text">
+        <span class="resume__label">આગળ વાંચો</span>
+        <span class="resume__title">${esc(last.bookTitle || '')}${last.title ? ` • ${esc(last.title)}` : ''}</span>
+      </span>
+      ${icon('chevron-right', 'resume__go')}
+    </a>`;
+}
+
+export function booksView({ books, listState, query, last }) {
   const head = (count) => `
     <div class="page-head">
       <div>
@@ -83,7 +97,7 @@ export function booksView({ books, listState, query }) {
   if (shown.length === 0) {
     return `${head(0)}<div class="panel panel--center">${icon('search', 'panel__icon')}<p class="panel__title">કોઈ પુસ્તક મળ્યું નથી</p><p class="panel__text">અન્ય શબ્દ લખીને ફરી શોધો</p></div>`;
   }
-  return `${head(shown.length)}<div class="book-grid" id="books-grid">${shown.map(bookCard).join('')}</div>`;
+  return `${head(shown.length)}${query ? '' : resumeBanner(last, books)}<div class="book-grid" id="books-grid">${shown.map(bookCard).join('')}</div>`;
 }
 
 /* ---------- પુસ્તક ખૂલતી વખતે (હજી લોડ નથી) ---------- */
@@ -191,6 +205,21 @@ export function subChaptersView({ book, chapterIndex, query }) {
 
 /* ---------- વાંચન ---------- */
 
+// આખી બુકનો સળંગ વાંચન ક્રમ: પેટા-પ્રકરણ હોય તો દરેક પેટા-પ્રકરણ, નહીં તો પ્રકરણ.
+// "અગાઉનું/આગળનું" આ ક્રમમાં ચાલે છે, એટલે પ્રકરણ બદલાય ત્યારે પણ બટન ચાલુ રહે.
+function sequenceOf(book) {
+  if (book._seqFor !== book.chapters) {
+    const seq = [];
+    book.chapters.forEach((c, ci) => {
+      if (c.hasSubChapters) c.subChapters.forEach((sub, si) => seq.push({ ci, si, title: sub.title, chapterTitle: c.title }));
+      else seq.push({ ci, si: null, title: c.title, chapterTitle: c.title });
+    });
+    book._seq = seq;
+    book._seqFor = book.chapters;
+  }
+  return book._seq;
+}
+
 export function readerView({ book, chapterIndex, subIndex, prefs }) {
   const chapter = book.chapters[chapterIndex];
   const hasSub = chapter.hasSubChapters && subIndex !== null && chapter.subChapters[subIndex];
@@ -204,19 +233,25 @@ export function readerView({ book, chapterIndex, subIndex, prefs }) {
     meta = `${book.title} • ${chapter.title}`;
     backHref = href(book.key, chapterIndex);
     backText = 'પેટા-પ્રકરણ યાદી';
-    if (subIndex > 0) prev = { title: chapter.subChapters[subIndex - 1].title, to: href(book.key, chapterIndex, subIndex - 1) };
-    if (subIndex < chapter.subChapters.length - 1)
-      next = { title: chapter.subChapters[subIndex + 1].title, to: href(book.key, chapterIndex, subIndex + 1) };
   } else {
     title = chapter.title;
     raw = chapter.content;
     meta = book.title;
     backHref = href(book.key);
     backText = 'પ્રકરણ યાદી';
-    if (chapterIndex > 0) prev = { title: book.chapters[chapterIndex - 1].title, to: href(book.key, chapterIndex - 1) };
-    if (chapterIndex < book.chapters.length - 1)
-      next = { title: book.chapters[chapterIndex + 1].title, to: href(book.key, chapterIndex + 1) };
   }
+
+  const seq = sequenceOf(book);
+  const currentSi = hasSub ? subIndex : null;
+  const pos = seq.findIndex((x) => x.ci === chapterIndex && x.si === currentSi);
+  const neighbor = (item) =>
+    item && {
+      // બીજા પ્રકરણમાં જતું હોય તો પ્રકરણનું નામ પણ બતાવો
+      title: item.ci !== chapterIndex && item.chapterTitle !== item.title ? `${item.chapterTitle} • ${item.title}` : item.title,
+      to: href(book.key, item.ci, item.si),
+    };
+  prev = pos > 0 ? neighbor(seq[pos - 1]) : null;
+  next = pos >= 0 && pos < seq.length - 1 ? neighbor(seq[pos + 1]) : null;
 
   const blocks = toBlocks(raw, title);
   const body = blocks.length

@@ -1,8 +1,21 @@
 /* સત્સંગ પુસ્તકાલય: સ્ટાઇલ. બાહ્ય CSS framework વગર. */
 
+/* ---------- ફોન્ટ ----------
+   ફાઇલ: fonts/Bhujmandir Hari.ttf (નામ અને મોટા-નાના અક્ષર બરાબર આ જ, GitHub Pages case-sensitive છે).
+   એક જ ફાઇલ છે, એટલે weight 100-900 જાહેર કર્યું: બ્રાઉઝર નકલી "bold" બનાવીને અક્ષર બગાડતું નથી.
+   ફાઇલ ન મળે કે કોઈ અક્ષર ન હોય તો Noto Serif Gujarati વપરાય. */
+@font-face {
+  font-family: 'Bhujmandir Hari';
+  src: url('../fonts/Bhujmandir%20Hari.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---------- થીમ ---------- */
 :root,
 :root[data-theme='sepia'] {
+  --font-serif: 'Bhujmandir Hari', 'Noto Serif Gujarati', serif;
   --bg: #fdf8f2;
   --bg-2: #f4ebe1;
   --card: #ffffff;
@@ -190,7 +203,7 @@ button {
   height: 1.3rem;
 }
 .brand__name {
-  font-family: 'Noto Serif Gujarati', serif;
+  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.125rem;
   letter-spacing: -0.01em;
@@ -496,7 +509,7 @@ button {
   flex: 1;
 }
 .page-head__title {
-  font-family: 'Noto Serif Gujarati', serif;
+  font-family: var(--font-serif);
   font-size: 1.3rem;
   line-height: 1.35;
   font-weight: 700;
@@ -522,6 +535,52 @@ button {
   color: var(--accent-text);
   font-weight: 600;
   margin: 0;
+}
+
+/* ---------- આગળ વાંચો ---------- */
+.resume {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 1rem;
+  transition: transform 0.1s;
+}
+.resume:active {
+  transform: scale(0.99);
+}
+.resume__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.resume__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.resume__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-text);
+}
+.resume__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.resume__go {
+  color: var(--accent-text);
 }
 
 /* ---------- બુક કાર્ડ ---------- */
@@ -580,7 +639,7 @@ button {
   min-width: 0;
 }
 .book-card__title {
-  font-family: 'Noto Serif Gujarati', serif;
+  font-family: var(--font-serif);
   font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.4;
@@ -658,7 +717,7 @@ button {
   gap: 0.35rem;
 }
 .list-item__title {
-  font-family: 'Noto Serif Gujarati', serif;
+  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.02rem;
   line-height: 1.4;
@@ -714,7 +773,7 @@ button {
   color: var(--text-2);
 }
 .panel__title {
-  font-family: 'Noto Serif Gujarati', serif;
+  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.1rem;
 }
@@ -817,7 +876,7 @@ button {
   margin-bottom: 0.4rem;
 }
 .paper__title {
-  font-family: 'Noto Serif Gujarati', serif;
+  font-family: var(--font-serif);
   font-size: 1.4rem;
   line-height: 1.45;
   font-weight: 700;
@@ -832,7 +891,7 @@ button {
   overflow-wrap: anywhere;
 }
 .reader-body.is-serif {
-  font-family: 'Noto Serif Gujarati', serif;
+  font-family: var(--font-serif);
 }
 .reader-body.is-sans {
   font-family: 'Noto Sans Gujarati', sans-serif;
